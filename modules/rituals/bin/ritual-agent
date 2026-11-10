@@ -1,0 +1,6 @@
+#!/bin/sh
+set -eu
+umask 077
+RITUAL_HOME=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+. "$RITUAL_HOME/bin/node.sh"
+exec "$RITUAL_NODE" "$RITUAL_HOME/src/bin/ritual-agent.ts" "$@"

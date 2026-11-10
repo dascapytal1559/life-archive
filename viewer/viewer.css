@@ -1,0 +1,1988 @@
+/* The pages the console wraps (Events' rows, Health, Rituals, Inspirations), styled in friend-map's night look (its
+   demos.css colours, and its Table's rows); the console sets these tokens again for its two looks and re-colours what
+   is written outright (console/console.css's bridges). */
+
+:root {
+  --night: #070b16;
+  --star: #e8eefc;
+  --dim: #8d97ad;
+  --me: #f4b860;
+  --call: #5fe08a;
+  --faint: rgba(200, 214, 255, 0.08);
+  --line: rgba(141, 151, 173, 0.3);
+  --panel: #0c1224;
+  --head: #0b1122;
+  --danger: #ff7a6b;
+  /* A split chart's parts, in their slots' order: the dataviz reference palette's dark steps, validated on --night
+     (adjacent CVD ΔE ≥ 8.4, normal-vision ≥ 19.3, all ≥ 3:1); a ninth part on is Other. */
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --series-4: #c98500;
+  --series-5: #d55181;
+  --series-6: #008300;
+  --series-7: #9085e9;
+  --series-8: #e66767;
+  --series-other: #6b7385;
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  color: var(--star);
+  background: radial-gradient(ellipse at 50% 40%, #121b33 0%, var(--night) 70%) fixed, var(--night);
+  font: 13px/1.35 var(--sans);
+  -webkit-text-size-adjust: 100%;
+}
+
+button,
+select,
+input {
+  font: inherit;
+  color: inherit;
+}
+
+.viewer__message {
+  margin: 30vh auto 0;
+  color: var(--dim);
+  text-align: center;
+  font-size: 15px;
+}
+
+.viewer__error {
+  margin: 0 22px 8px;
+  color: var(--danger);
+}
+
+/* The filter bar: a search box (People), a button per filter, each opening its values; the chart's range as a chip;
+   Clear all. */
+.filters__search {
+  box-sizing: border-box;
+  width: 200px;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(10, 16, 32, 0.66);
+  outline: none;
+}
+
+.filters__search:focus {
+  border-color: var(--me);
+}
+
+.filters__search:not(:placeholder-shown) {
+  border-color: rgba(244, 184, 96, 0.6);
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 0 22px 10px;
+}
+
+.filter {
+  position: relative;
+}
+
+.filter__button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  max-width: 260px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(10, 16, 32, 0.66);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.filter__button:hover,
+.filter__button[aria-expanded="true"] {
+  border-color: rgba(141, 151, 173, 0.55);
+}
+
+.filter__label,
+.filter__caret {
+  color: var(--dim);
+}
+
+.filter__summary {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.filter__button--on {
+  border-color: rgba(244, 184, 96, 0.6);
+}
+
+.filter__button--on .filter__summary {
+  color: var(--me);
+}
+
+.filter__menu {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 6px);
+  left: 0;
+  box-sizing: border-box;
+  width: max-content;
+  min-width: 220px;
+  max-width: min(320px, calc(100vw - 32px));
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+}
+
+.filter__search {
+  box-sizing: border-box;
+  width: 100%;
+  height: 30px;
+  margin-bottom: 6px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--head);
+  outline: none;
+}
+
+.filter__search:focus {
+  border-color: var(--me);
+}
+
+.filter__values {
+  max-height: min(320px, 50vh);
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+  list-style: none;
+}
+
+.filter__value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 28px;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.filter__value:hover {
+  background: rgba(141, 151, 173, 0.12);
+}
+
+.filter__value[aria-pressed="true"] {
+  background: rgba(244, 184, 96, 0.14);
+}
+
+.filter__value--any {
+  color: var(--dim);
+}
+
+.filter__check {
+  flex: none;
+  width: 11px;
+  height: 11px;
+  border: 1px solid var(--dim);
+  border-radius: 3px;
+}
+
+.filter__value[aria-pressed="true"] .filter__check {
+  border-color: var(--me);
+  background: var(--me);
+}
+
+.filter__name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.filter__count {
+  color: var(--dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.filter__note {
+  padding: 6px 8px;
+  color: var(--dim);
+  font-style: italic;
+}
+
+.filters__clear {
+  height: 30px;
+  padding: 0 6px;
+  border: 0;
+  background: none;
+  color: var(--dim);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.filters__clear:hover {
+  color: var(--star);
+}
+
+/* A pill: a person in a row (a button narrowing to them), and the chart's range in the filter bar. */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 20px;
+  padding: 0 8px;
+  border: 1px solid rgba(232, 238, 252, 0.45);
+  border-radius: 10px;
+  background: rgba(232, 238, 252, 0.05);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.chip--person {
+  margin-right: 4px;
+  cursor: pointer;
+}
+
+.chip--person:hover,
+.chip--link:hover {
+  border-color: var(--me);
+  color: var(--me);
+}
+
+/* A chat in a row: its name, cut short to fit, narrowing the view to it. */
+.chip--link {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 18px;
+  vertical-align: middle;
+  cursor: pointer;
+}
+
+.chip--range {
+  height: 30px;
+  padding: 0 4px 0 10px;
+  border-color: rgba(244, 184, 96, 0.6);
+  border-radius: 8px;
+  color: var(--me);
+  font-size: 13px;
+}
+
+.chip--range button {
+  padding: 0 6px;
+  border: 0;
+  background: none;
+  color: var(--dim);
+  cursor: pointer;
+}
+
+.chip--range button:hover {
+  color: var(--star);
+}
+
+/* The chart: a line of its total (or the bar pointed at) and its controls, over the bars. */
+.chart {
+  padding: 0 22px 6px;
+}
+
+.chart__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
+  min-height: 30px;
+}
+
+.chart__readout {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.chart__value {
+  color: var(--star);
+}
+
+.chart__dim {
+  color: var(--dim);
+}
+
+.chart__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.segmented {
+  display: inline-flex;
+  padding: 2px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.segmented button {
+  height: 24px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--dim);
+  cursor: pointer;
+}
+
+.segmented button[aria-checked="true"] {
+  background: rgba(141, 151, 173, 0.18);
+  color: var(--star);
+}
+
+.select {
+  height: 30px;
+  padding: 0 24px 0 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  appearance: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%238d97ad' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 8px center, rgba(10, 16, 32, 0.66);
+  cursor: pointer;
+}
+
+.select option {
+  background: var(--panel);
+}
+
+.chart__plot {
+  position: relative;
+  height: 140px;
+}
+
+.chart__plot svg {
+  display: block;
+  overflow: visible;
+}
+
+.chart__bucket {
+  fill: var(--call);
+  opacity: 0.72;
+}
+
+.chart__bucket--hover {
+  opacity: 1;
+}
+
+.chart__bucket--chosen {
+  fill: var(--me);
+  opacity: 1;
+}
+
+.chart__part--1 { fill: var(--series-1); background: var(--series-1); }
+.chart__part--2 { fill: var(--series-2); background: var(--series-2); }
+.chart__part--3 { fill: var(--series-3); background: var(--series-3); }
+.chart__part--4 { fill: var(--series-4); background: var(--series-4); }
+.chart__part--5 { fill: var(--series-5); background: var(--series-5); }
+.chart__part--6 { fill: var(--series-6); background: var(--series-6); }
+.chart__part--7 { fill: var(--series-7); background: var(--series-7); }
+.chart__part--8 { fill: var(--series-8); background: var(--series-8); }
+.chart__part--other { fill: var(--series-other); background: var(--series-other); }
+
+/* A split bar keeps its parts' colours: hovered or chosen, it only stands out brighter. */
+g.chart__bucket {
+  opacity: 0.85;
+}
+
+g.chart__bucket--hover,
+g.chart__bucket--chosen {
+  opacity: 1;
+}
+
+.chart__key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+  margin: 2px 0 4px;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+  color: var(--star);
+  font-variant-numeric: tabular-nums;
+}
+
+.chart__key li {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.chart__swatch {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+}
+
+.chart__drag {
+  fill: rgba(244, 184, 96, 0.1);
+  pointer-events: none;
+}
+
+.chart__grid {
+  stroke: var(--faint);
+}
+
+.chart__axis {
+  stroke: rgba(141, 151, 173, 0.35);
+}
+
+.chart__tick {
+  fill: var(--dim);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.chart__touch {
+  fill: transparent;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.chart__empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  color: var(--dim);
+}
+
+/* The table: friend-map's, rows of one height (ROW in VirtualTable.tsx), nothing in a cell wrapping. */
+.table {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 0 22px 22px;
+  border-top: 1px solid var(--faint);
+}
+
+.table table {
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.table th,
+.table td {
+  box-sizing: border-box;
+  height: 34px;
+  padding: 0 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+  border-bottom: 1px solid var(--faint);
+}
+
+.table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--head);
+  color: var(--dim);
+  font-weight: 400;
+}
+
+.table th button {
+  display: inline-flex;
+  gap: 4px;
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--dim);
+  cursor: pointer;
+}
+
+.table th button:hover,
+.table th[aria-sort] button {
+  color: var(--star);
+}
+
+.table__arrow {
+  color: var(--me);
+}
+
+.table .table__numeric {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.table th.table__numeric button {
+  flex-direction: row-reverse;
+}
+
+.table tbody tr.table__odd {
+  background: rgba(141, 151, 173, 0.08);
+}
+
+.table tbody tr:not(.table__spacer):hover {
+  background: rgba(141, 151, 173, 0.1);
+}
+
+.table tbody tr.table__row {
+  cursor: pointer;
+}
+
+.table tbody tr.table__row:focus-visible {
+  outline: 1px solid var(--me);
+  outline-offset: -1px;
+}
+
+.table tbody tr.table__open,
+.table tbody tr.table__open:hover {
+  background: rgba(244, 184, 96, 0.14);
+}
+
+.table tbody tr.table__open td:first-child {
+  box-shadow: inset 2px 0 0 var(--me);
+}
+
+.table tr.table__spacer td {
+  border: 0;
+  padding: 0;
+}
+
+.table__dim {
+  color: var(--dim);
+}
+
+.table__empty {
+  color: var(--dim);
+  text-align: center;
+}
+
+/* The drawer: one row, at the right over the table on a wide screen (from the bottom on a phone, below). */
+.drawer {
+  position: fixed;
+  z-index: 30;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  width: min(400px, 100vw);
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) 0;
+  border-left: 1px solid var(--line);
+  background: var(--panel);
+  box-shadow: -16px 0 40px rgba(0, 0, 0, 0.45);
+}
+
+.drawer__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px 10px;
+  border-bottom: 1px solid var(--faint);
+}
+
+.drawer__header h2 {
+  margin: 0;
+  font: italic 400 22px/1.2 var(--serif);
+}
+
+.drawer__close {
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: none;
+  color: var(--dim);
+  cursor: pointer;
+}
+
+.drawer__close:hover {
+  color: var(--star);
+}
+
+.drawer__body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 6px 18px 18px;
+}
+
+.drawer__note {
+  padding: 0 18px;
+  color: var(--dim);
+}
+
+.drawer__fields {
+  margin: 0;
+}
+
+.drawer__field {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 12px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--faint);
+}
+
+.drawer__field dt {
+  color: var(--dim);
+}
+
+.drawer__field dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+
+.drawer__views {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.drawer__view {
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(10, 16, 32, 0.66);
+  cursor: pointer;
+}
+
+.drawer__view:hover {
+  border-color: rgba(244, 184, 96, 0.6);
+  color: var(--me);
+}
+
+/* Asking for the row's chat or conversation: the drawer's one way to its words. */
+.drawer__read {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: 16px;
+}
+
+.drawer__read-button {
+  height: 34px;
+  padding: 0 14px;
+  border: 1px solid rgba(244, 184, 96, 0.55);
+  border-radius: 8px;
+  background: rgba(244, 184, 96, 0.1);
+  color: var(--me);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.drawer__read-button:hover {
+  background: rgba(244, 184, 96, 0.18);
+}
+
+.drawer__read-note {
+  color: var(--dim);
+  font-size: 12px;
+}
+
+/* A conversation, over the page at a reading width (the whole screen on a phone, below): a chat's messages as
+   bubbles, his at the right in his amber, theirs at the left; an LLM session's prompts as his bubbles and its replies
+   as plain text, each run of tool calls folded. */
+.conversation {
+  position: fixed;
+  z-index: 40;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  background: rgba(3, 6, 14, 0.7);
+}
+
+.conversation__panel {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  width: min(760px, 100vw);
+  height: 100%;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  border-right: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+  background: var(--panel);
+  box-shadow: 0 0 60px rgba(0, 0, 0, 0.55);
+}
+
+.conversation__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 20px 10px;
+  border-bottom: 1px solid var(--faint);
+}
+
+.conversation__heading {
+  min-width: 0;
+}
+
+.conversation__heading h2 {
+  margin: 0;
+  overflow: hidden;
+  font: italic 400 22px/1.2 var(--serif);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.conversation__subtitle {
+  color: var(--dim);
+  font-size: 13px;
+}
+
+.conversation__body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 10px 20px 28px;
+}
+
+.conversation__more {
+  display: block;
+  height: 30px;
+  margin: 8px auto 12px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(10, 16, 32, 0.66);
+  color: var(--dim);
+  cursor: pointer;
+}
+
+.conversation__more:hover:not(:disabled) {
+  border-color: rgba(244, 184, 96, 0.6);
+  color: var(--me);
+}
+
+.conversation__day {
+  margin: 18px 0 8px;
+  color: var(--dim);
+  font-size: 12px;
+  text-align: center;
+}
+
+.msg {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin: 2px 0;
+}
+
+.msg--self {
+  align-items: flex-end;
+}
+
+.msg--notice {
+  align-items: center;
+}
+
+.msg__sender {
+  margin: 8px 12px 2px;
+  color: var(--dim);
+  font-size: 12px;
+}
+
+.msg__bubble {
+  box-sizing: border-box;
+  max-width: min(78%, 560px);
+  padding: 7px 12px;
+  border: 1px solid transparent;
+  border-radius: 16px;
+  background: rgba(141, 151, 173, 0.15);
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.msg--self .msg__bubble {
+  border-color: rgba(244, 184, 96, 0.3);
+  background: rgba(244, 184, 96, 0.15);
+}
+
+.msg--notice .msg__bubble {
+  max-width: 90%;
+  padding: 2px 8px;
+  background: none;
+  color: var(--dim);
+  font-size: 13px;
+  font-style: italic;
+  text-align: center;
+}
+
+.msg--focus .msg__bubble,
+.turn--focus .turn__body {
+  outline: 2px solid var(--me);
+  outline-offset: 3px;
+}
+
+.msg__time {
+  margin: 2px 12px 6px;
+  color: var(--dim);
+  font-size: 11px;
+}
+
+.msg__unsent,
+.msg__dim {
+  color: var(--dim);
+}
+
+.msg__unsent {
+  font-style: italic;
+}
+
+.msg__call {
+  color: var(--call);
+}
+
+.msg__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.msg__chip {
+  display: inline-block;
+  padding: 1px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--dim);
+  font-size: 12px;
+}
+
+.msg__reactions {
+  display: block;
+  margin-top: 2px;
+  font-size: 13px;
+  letter-spacing: 2px;
+}
+
+.turn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin: 10px 0;
+}
+
+.turn--prompt {
+  align-items: flex-end;
+}
+
+.turn__who {
+  margin: 0 4px 4px;
+  color: var(--dim);
+  font-size: 12px;
+}
+
+.turn__body {
+  box-sizing: border-box;
+  max-width: 100%;
+  min-width: 0;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.turn--prompt .turn__body {
+  max-width: min(85%, 600px);
+  padding: 8px 12px;
+  border: 1px solid rgba(244, 184, 96, 0.3);
+  border-radius: 16px;
+  background: rgba(244, 184, 96, 0.15);
+}
+
+.turn__text {
+  margin: 0 0 8px;
+  white-space: pre-wrap;
+}
+
+.turn__text:last-child {
+  margin-bottom: 0;
+}
+
+.turn__code {
+  max-width: 100%;
+  margin: 0 0 8px;
+  padding: 8px 10px;
+  overflow-x: auto;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.35);
+  font: 12.5px/1.45 ui-monospace, "SF Mono", Menlo, monospace;
+  white-space: pre;
+}
+
+.turn__tools {
+  margin: 0 0 8px;
+  color: var(--dim);
+  font-size: 13px;
+}
+
+.turn__tools summary {
+  cursor: pointer;
+}
+
+.turn__tools ol {
+  margin: 6px 0 0;
+  padding-left: 22px;
+}
+
+.turn__tools li {
+  margin: 3px 0;
+}
+
+.turn__tools code {
+  display: inline-block;
+  max-width: 100%;
+  max-height: 9em;
+  overflow: auto;
+  vertical-align: top;
+  color: var(--star);
+  font: 12px/1.45 ui-monospace, "SF Mono", Menlo, monospace;
+  white-space: pre-wrap;
+}
+
+@media (pointer: coarse) {
+  .filters__search {
+    font-size: 16px;
+  }
+
+  .filter__search {
+    /* 16px, so a phone does not zoom in on the box. */
+    font-size: 16px;
+  }
+
+  .filter__value {
+    min-height: 36px;
+  }
+}
+
+/* A phone: everything closer to the edges, a shorter chart, and the table's first column held at the left as the
+   rest scroll sideways under it, its date over its time, on the night's colour with its row's shade over it. */
+@media (max-width: 560px) {
+  .filters,
+  .chart {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .filter__button {
+    max-width: 180px;
+  }
+
+  .filters__search {
+    width: 100%;
+  }
+
+  .drawer {
+    top: auto;
+    left: 0;
+    width: 100%;
+    max-height: 72vh;
+    padding-left: env(safe-area-inset-left);
+    border-top: 1px solid var(--line);
+    border-left: 0;
+    border-radius: 14px 14px 0 0;
+    box-shadow: 0 -16px 40px rgba(0, 0, 0, 0.5);
+  }
+
+  .drawer__header,
+  .drawer__body {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .conversation__panel {
+    width: 100%;
+    border: 0;
+  }
+
+  .conversation__header,
+  .conversation__body {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .msg__bubble {
+    max-width: 86%;
+  }
+
+  .turn--prompt .turn__body {
+    max-width: 92%;
+  }
+
+  .chart__plot {
+    height: 110px;
+  }
+
+  .table {
+    padding: 0 16px 16px;
+  }
+
+  .table col:first-child {
+    width: 96px !important;
+  }
+
+  .table th:first-child,
+  .table td:first-child {
+    position: sticky;
+    left: 0;
+    box-shadow: 1px 0 0 var(--faint);
+  }
+
+  .table th:first-child {
+    z-index: 2;
+  }
+
+  .table td:first-child {
+    z-index: 1;
+    background: #0a0f1e;
+    white-space: normal;
+    font-size: 12px;
+    line-height: 1.2;
+  }
+
+  .table td:first-child .table__time {
+    display: block;
+  }
+
+  .table tbody tr.table__odd td:first-child {
+    background: linear-gradient(rgba(141, 151, 173, 0.08), rgba(141, 151, 173, 0.08)) #0a0f1e;
+  }
+}
+
+/* The Health tab (health/HealthView.tsx): one scrolling column under the header. Tests in the order the server gives
+   (out, mildly out, at the edge, in range, under treatment, not judged), each a card with its chart, then heart rate
+   and the physical assessment, then the authority's sources. Three colours for a grade, on the chips, dots and the
+   bands behind a chart: green in range (at the edge too), yellow mildly out, red out (far out folded in, format.ts).
+   The yellow band is bright and half opaque: a faint yellow over the night card mixes to brown. */
+
+:root {
+  --status-out: #ff5a5f;
+  --status-mild: #f2c14e;
+  --status-in: #5fe08a;
+  --status-treated: #9085e9;
+  --status-unjudged: #8d97ad;
+  --band-in: rgba(95, 224, 138, 0.16);
+  --band-mild: rgba(255, 224, 70, 0.5);
+  --band-out: rgba(255, 70, 80, 0.28);
+  /* Each category's colour (the catalogue's body systems, by key), shown only as a dot and a tinted outline, never as
+     a fill, so none reads as a status. */
+  --cat-heart: #ff6fae;
+  --cat-sugar: #ff9d4d;
+  --cat-blood: #d77bff;
+  --cat-iron: #c8a07a;
+  --cat-kidney: #4aa8ff;
+  --cat-liver: #2fd3bd;
+  --cat-hormones: #929dff;
+  --cat-metals: #9fb3c8;
+  --cat-body: #3fe0f5;
+  --cat-allergy: #e6d3a3;
+  --cat-infection: #c3f07f;
+  --cat-sample: #ececec;
+}
+
+/* A category's colour, as --cat, for its chip and its heading's dot; one the catalogue does not list stays dim. */
+.cat { --cat: var(--dim); }
+.cat--heart { --cat: var(--cat-heart); }
+.cat--sugar { --cat: var(--cat-sugar); }
+.cat--blood { --cat: var(--cat-blood); }
+.cat--iron { --cat: var(--cat-iron); }
+.cat--kidney { --cat: var(--cat-kidney); }
+.cat--liver { --cat: var(--cat-liver); }
+.cat--hormones { --cat: var(--cat-hormones); }
+.cat--metals { --cat: var(--cat-metals); }
+.cat--body { --cat: var(--cat-body); }
+.cat--allergy { --cat: var(--cat-allergy); }
+.cat--infection { --cat: var(--cat-infection); }
+.cat--sample { --cat: var(--cat-sample); }
+
+.cat__dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: var(--cat);
+  vertical-align: 1px;
+}
+
+.health {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 6px 16px 64px;
+  display: grid;
+  gap: 28px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.health__top {
+  display: grid;
+  gap: 10px;
+}
+
+.health__who {
+  margin: 0;
+  color: var(--dim);
+}
+
+.health__who a,
+.health a {
+  color: var(--star);
+}
+
+/* Group by: a small segmented switch under the line saying who the results are judged for. */
+.health__group-by {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  color: var(--dim);
+  font-size: 12px;
+}
+
+.health__group-by span {
+  margin-right: 4px;
+}
+
+.health__group-by button {
+  min-height: 28px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: transparent;
+  color: var(--dim);
+  font: inherit;
+  cursor: pointer;
+}
+
+.health__group-by button:hover {
+  color: var(--star);
+}
+
+.health__group-by button[aria-checked="true"] {
+  border-color: var(--star);
+  color: var(--star);
+  cursor: default;
+}
+
+@media (pointer: coarse) {
+  .health__group-by button {
+    min-height: 36px;
+  }
+}
+
+/* A category's heading, by category: its name in its colour. */
+.health .cat > h2 {
+  color: var(--cat);
+}
+
+.health__none {
+  margin: 0;
+  color: var(--dim);
+}
+
+.health__warn {
+  margin: 0;
+  color: var(--status-mild);
+}
+
+.dot-key {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.dot-key--out { background: var(--status-out); }
+.dot-key--mild { background: var(--status-mild); }
+.dot-key--edge,
+.dot-key--in { background: var(--status-in); }
+.dot-key--treated { background: var(--status-treated); }
+.dot-key--unjudged { background: var(--status-unjudged); }
+
+.health__group {
+  display: grid;
+  gap: 12px;
+}
+
+.health h2 {
+  margin: 0;
+  font: 600 11px/1.4 var(--sans);
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+.health h2 span {
+  margin-left: 6px;
+  color: var(--star);
+}
+
+.health__pointer {
+  margin: 0;
+  color: var(--dim);
+  font-size: 13px;
+}
+
+.health__pointer a { color: inherit; }
+
+.health__fold {
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0 6px;
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 4px 0;
+  min-height: 24px;
+}
+
+.health__fold:focus-visible { outline: 2px solid var(--cat, var(--dim)); outline-offset: 2px; }
+.health__fold span { margin-left: 0; }
+
+.health__chevron {
+  width: 6px;
+  height: 6px;
+  margin: 0 4px 0 2px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 0.15s;
+}
+
+.health__fold[aria-expanded="false"] .health__chevron { transform: rotate(-45deg); }
+
+.health__hint {
+  font-style: normal;
+  letter-spacing: 0.04em;
+}
+
+.health__hint--out { color: var(--status-out); }
+.health__hint--mild { color: var(--status-mild); }
+
+.test,
+.fitness__card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 16px;
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+/* Each result one row of a 12-column grid: its description in 6 columns, its graph (a chart, or a screen's
+   results over time) in the other 6; with no graph, the description alone across all 12. A phone stacks the two. */
+.test {
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: 20px;
+  row-gap: 10px;
+  align-items: center;
+}
+
+.test__text {
+  grid-column: span 6;
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.test--text .test__text {
+  grid-column: 1 / -1;
+}
+
+.test__graph {
+  grid-column: span 6;
+  min-width: 0;
+}
+
+/* The modal telling how a range was built: centred, scrolled within itself, the page dimmed and inert behind it. */
+.range-info {
+  box-sizing: border-box;
+  width: min(620px, calc(100vw - 24px));
+  max-height: calc(100dvh - 48px);
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel);
+  color: var(--star);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.range-info::backdrop {
+  background: rgba(3, 6, 14, 0.72);
+}
+
+.range-info__body {
+  display: grid;
+  gap: 14px;
+  padding: 18px 20px 20px;
+}
+
+.range-info__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.range-info__eyebrow {
+  color: var(--dim);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.health .range-info h2 {
+  margin: 2px 0 0;
+  font: italic 400 22px/1.2 var(--serif);
+  letter-spacing: 0.01em;
+  text-transform: none;
+  color: var(--star);
+}
+
+.range-info__close {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: none;
+  color: var(--star);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.range-info__close:hover,
+.range-info__close:focus-visible {
+  background: var(--faint);
+}
+
+.range-info section {
+  display: grid;
+  gap: 6px;
+}
+
+.range-info h3 {
+  margin: 0;
+  font: 600 11px/1.4 var(--sans);
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+.range-info p {
+  margin: 0;
+}
+
+.range-info__kind {
+  color: var(--dim);
+}
+
+.range-kind {
+  display: inline-block;
+  margin-right: 4px;
+  padding: 2px 9px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--star);
+  background: var(--faint);
+}
+
+.range-kind--reference-interval { color: #9cefb6; background: rgba(95, 224, 138, 0.12); }
+.range-kind--decision-limit { color: #f8d19a; background: rgba(244, 184, 96, 0.15); }
+.range-kind--lab-interval { color: #c4bdfa; background: rgba(144, 133, 233, 0.16); }
+
+.range-info__label {
+  color: var(--dim);
+  font-size: 12px;
+}
+
+.range-info__rungs td {
+  vertical-align: top;
+}
+
+.range-info__rungs td:first-child {
+  white-space: nowrap;
+}
+
+.range-info__here {
+  color: var(--dim);
+  font-weight: 400;
+}
+
+.range-info__stars {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--dim);
+}
+
+.range-info__stars b {
+  color: var(--star);
+  font-weight: 600;
+}
+
+.range-info__grading,
+.range-info__cite {
+  display: grid;
+  gap: 6px;
+}
+
+.range-info__cite + .range-info__cite {
+  padding-top: 10px;
+  border-top: 1px solid var(--faint);
+}
+
+.range-info__bands {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+}
+
+.range-info__bands th {
+  padding: 0 14px 4px 0;
+  color: var(--dim);
+  font-weight: 400;
+  text-align: left;
+}
+
+.range-info__bands td {
+  padding: 4px 14px 4px 0;
+  border-top: 1px solid var(--faint);
+  color: var(--dim);
+}
+
+.range-info__applied td {
+  color: var(--star);
+  font-weight: 600;
+}
+
+.range-info__source {
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.range-info__link {
+  justify-self: start;
+  padding: 8px 14px;
+  border: 1px solid var(--star);
+  border-radius: 8px;
+  color: var(--star);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.range-info__link:hover,
+.range-info__link:focus-visible {
+  background: var(--faint);
+}
+
+.range-info__fine {
+  color: var(--dim);
+  font-size: 12px;
+}
+
+.range-info__key h4 {
+  margin: 0 0 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.range-info__key ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 2px;
+}
+
+.range-info__key li {
+  display: grid;
+  grid-template-columns: 3.6em 1fr;
+}
+
+.health__group--out .test { border-color: rgba(255, 90, 95, 0.5); }
+.health__group--mild .test { border-color: rgba(242, 193, 78, 0.4); }
+
+.test__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.test__name {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.test__unit {
+  margin-left: 7px;
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--dim);
+}
+
+.test__latest {
+  font-variant-numeric: tabular-nums;
+  color: var(--dim);
+}
+
+/* The body system: a chip outlined in its category's colour, with its dot, on the neutral fill, so it never reads as a
+   status colour. */
+.test__system {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 8px;
+  border: 1px solid color-mix(in srgb, var(--cat) 55%, transparent);
+  border-radius: 10px;
+  background: var(--faint);
+  color: var(--star);
+  font-size: 12px;
+  white-space: nowrap;
+  vertical-align: 1px;
+}
+
+.test__latest b {
+  color: var(--star);
+  font-size: 16px;
+}
+
+.test__range {
+  margin: 0;
+  color: var(--dim);
+  font-size: 13px;
+}
+
+
+/* A toggle that slides what it holds open: the panel's one row grows from 0fr to 1fr as it fades in, and shut, it
+   is hidden once it has slid shut (visibility waits out the slide). Reduced motion: at once. */
+.collapse__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  margin: 0 -6px;
+  padding: 2px 6px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--dim);
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.collapse__toggle svg {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 200ms ease;
+}
+
+.collapse__toggle:hover,
+.collapse__toggle:focus-visible {
+  color: var(--star);
+  background: var(--faint);
+}
+
+.collapse__toggle:focus-visible {
+  outline: 2px solid var(--star);
+  outline-offset: 0;
+}
+
+.collapse--open .collapse__toggle svg {
+  transform: rotate(90deg);
+}
+
+.collapse__panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  visibility: hidden;
+  transition: grid-template-rows 240ms ease, opacity 200ms ease, visibility 0s linear 240ms;
+}
+
+.collapse--open .collapse__panel {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  visibility: visible;
+  transition: grid-template-rows 240ms ease, opacity 240ms ease 40ms, visibility 0s;
+}
+
+.collapse__inner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .collapse__panel,
+  .collapse--open .collapse__panel,
+  .collapse__toggle svg {
+    transition: none;
+  }
+}
+
+.test__evidence {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 3px;
+  color: var(--dim);
+  font-size: 12px;
+}
+
+.test__source {
+  overflow-wrap: anywhere;
+  opacity: 0.75;
+}
+
+.pill {
+  flex: none;
+  padding: 3px 10px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.pill--out { color: #ffaeb0; background: rgba(255, 90, 95, 0.2); }
+.pill--mild { color: #f7da92; background: rgba(242, 193, 78, 0.15); }
+.pill--edge,
+.pill--in { color: #9cefb6; background: rgba(95, 224, 138, 0.12); }
+.pill--treated { color: #c4bdfa; background: rgba(144, 133, 233, 0.16); }
+.pill--unjudged { color: var(--dim); background: var(--faint); }
+
+.trend {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+
+.band--in { fill: var(--band-in); }
+.band--mild { fill: var(--band-mild); }
+.band--out { fill: var(--band-out); }
+.trend__today { stroke: var(--star); stroke-width: 1; stroke-dasharray: 2 3; opacity: 0.55; }
+.grid { stroke: var(--line); stroke-width: 1; opacity: 0.5; }
+.axis { fill: var(--dim); font-size: 11px; font-variant-numeric: tabular-nums; }
+/* A limit the chart ends at: labelled brighter than the ticks, so how near the line a result is still reads. */
+.trend__line { fill: none; stroke: var(--dim); stroke-width: 1.5; stroke-dasharray: 4 3; }
+/* Each step of the line, an arrowhead forward in time, in the line's colour (dots.ts's arrowHeads places it). */
+.trend__arrow { fill: var(--dim); }
+.trend__value { fill: var(--star); font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.dot { stroke: var(--panel); stroke-width: 2; }
+.dot--out { fill: var(--status-out); }
+.dot--mild { fill: var(--status-mild); }
+.dot--edge,
+.dot--in { fill: var(--status-in); }
+.dot--treated { fill: var(--status-treated); }
+.dot--unjudged { fill: var(--status-unjudged); }
+/* A result past the chart's fixed scale, on its edge: hollow. */
+.dot--beyond { fill: var(--panel); stroke: currentColor; stroke-width: 2.5; }
+.dot--beyond.dot--out { stroke: var(--status-out); }
+.dot--beyond.dot--mild { stroke: var(--status-mild); }
+.dot--beyond.dot--in,
+.dot--beyond.dot--edge { stroke: var(--status-in); }
+.dot--beyond.dot--treated { stroke: var(--status-treated); }
+
+/* A source's stars: how far to lean on it. Beside each result, those of the rung its latest result falls in, with its
+   grade one button opening how it is judged (RangeInfo.tsx). */
+.stars {
+  color: #f2d27a;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.test__grade {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  margin: -4px -6px;
+  padding: 4px 6px;
+  border: 0;
+  border-radius: 14px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+
+.test__grade:hover,
+.test__grade:focus-visible {
+  background: var(--faint);
+}
+
+.test__grade:hover .pill,
+.test__grade:focus-visible .pill {
+  filter: brightness(1.25);
+}
+
+.test__grade:focus-visible {
+  outline: 2px solid var(--star);
+  outline-offset: 0;
+}
+
+.fitness h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.fitness h3 span {
+  color: var(--dim);
+  font-weight: 400;
+}
+
+.fitness p {
+  margin: 0;
+}
+
+.fitness__big {
+  font: 400 44px/1 var(--serif);
+}
+
+.fitness__big small {
+  font: 14px var(--sans);
+  color: var(--dim);
+}
+
+.fitness__estimate {
+  color: var(--dim);
+  font-size: 13px;
+}
+
+.tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--faint);
+}
+
+.tag--measured { color: #9cefb6; }
+.tag--everlab-test { color: #9ec4ff; }
+.tag--wearable { color: #f8d19a; }
+.tag--everlab-score { color: #c4bdfa; }
+.tag--missing { color: #ffb3a9; }
+/* A record read only from someone's transcription of a portal (Records.tsx). */
+.tag--transcribed { color: var(--status-mild); margin-left: 6px; }
+
+.records__note p {
+  margin: 0;
+  color: var(--dim);
+  font-size: 13px;
+}
+
+.records__note .tag { margin: 0 4px 0 0; }
+
+/* What the immunisations protect against (Protection.tsx): each disease's interval as a bar from its latest dose to
+   its end, the part used dim and the part left blue, today a light tick between them. A lifelong protection (or one
+   with no booster set) is a full, softer bar; a course short of its doses is hatched; an ended interval is all dim.
+   Calm colours only, never a status's red. */
+.protection__about { margin: 0 0 4px; color: var(--dim); font-size: 13px; }
+.protection__about a,
+.protection__fresh a { color: inherit; }
+.protection__fresh { width: 50%; }
+.protection__fresh > div + div { margin-top: 3px; }
+
+.fresh {
+  position: relative;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.fresh__left {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: var(--series-1);
+}
+
+.fresh--course .fresh__left {
+  background: repeating-linear-gradient(135deg, var(--series-1) 0 4px, rgba(57, 135, 229, 0.35) 4px 8px);
+}
+
+.fresh--ended .fresh__left { display: none; }
+.fresh--lasting { background: rgba(57, 135, 229, 0.55); }
+
+.fresh__today {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--star);
+}
+
+.fresh--ended .fresh__today { margin-left: -2px; }
+
+.fresh__ends {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2px;
+  font-size: 11px;
+}
+
+/* A phone gives the bar the row's whole width, under the disease and its latest dose. */
+@media (max-width: 600px) {
+  .runs td.protection__fresh { grid-column: 1 / -1; width: auto; margin-top: 4px; }
+}
+
+.health__rubric {
+  white-space: normal;
+}
+
+.provenance {
+  display: grid;
+  gap: 6px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.provenance h4 {
+  margin: 0;
+}
+
+.provenance__explain {
+  color: var(--dim);
+  font-size: 13px;
+}
+
+.provenance__numbers {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 4px;
+}
+
+.provenance__numbers li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.provenance__numbers li > span:first-child {
+  min-width: 13em;
+}
+
+.provenance__everlab,
+.provenance__page {
+  color: var(--dim);
+  font-size: 12px;
+}
+
+.runs {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.runs th {
+  text-align: left;
+  color: var(--dim);
+  font-weight: 500;
+  padding: 4px 8px 4px 0;
+}
+
+.runs td {
+  padding: 6px 8px 6px 0;
+  border-top: 1px solid var(--line);
+  vertical-align: top;
+}
+
+.runs__device {
+  color: var(--dim);
+  font-size: 12px;
+}
+
+.health__sources {
+  color: var(--dim);
+  font-size: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.health__sources p {
+  margin: 0;
+}
+
+.health__sources ul {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 4px;
+}
+
+.health__sources b {
+  color: var(--star);
+  font-weight: 600;
+}
+
+@media (max-width: 600px) {
+  .test__text,
+  .test__graph { grid-column: 1 / -1; }
+  .runs thead { display: none; }
+  .runs tr { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 12px; padding: 8px 0; border-top: 1px solid var(--line); }
+  .runs td { border: 0; padding: 0; }
+  .runs td:first-child { grid-column: 1 / -1; }
+  .provenance__numbers li > span:first-child { min-width: 0; flex-basis: 100%; }
+}
+
+/* Rituals' tabs' styles are the rituals module's (modules/rituals/viewer/dots.css), over the console's tokens. */
+
+/* The Inspirations page's styles are the inspirations module's (modules/inspirations/viewer/inspirations.css), over the console's tokens. */

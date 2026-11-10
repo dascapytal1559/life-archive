@@ -1,0 +1,6 @@
+#!/bin/sh
+# The life archive's privacy guard (its docs/guard.md's "The privacy guard"): stops what would publish private data, once the
+# repository's own hook has run (it may change what is staged).
+node=$("$(dirname "$0")/pinned-node") || exit 1
+"$(dirname "$0")/chain" pre-commit || exit $?
+exec "$node" --no-warnings "$(dirname "$0")/../cli.ts" staged

@@ -1,0 +1,10 @@
+#!/bin/sh
+# The life archive's privacy guard (its docs/guard.md's "The privacy guard"): runs the repository's own hook named $1, with the
+# rest of the arguments and the standard input, from the folder git ran its hooks from before the guard was installed
+# (git config lifearchive.guardChain, which install sets; a relative one from the worktree's top, as git reads it).
+# Nothing when there is none.
+name=$1
+shift
+chain=$(git config --get lifearchive.guardChain) || exit 0
+[ -n "$chain" ] && [ -f "$chain/$name" ] && [ -x "$chain/$name" ] || exit 0
+exec "$chain/$name" "$@"

@@ -1,0 +1,2483 @@
+:root {
+  --ink: #1f2328;
+  --muted: #59636e;
+  --line: #d1d9e0;
+  --paper: #ffffff;
+  --wash: #f6f8fa;
+  --accent: #2f6f5e;
+  --danger: #b42318;
+  /* Hangouts in the events chart: a quiet violet, apart from the greys and the accent's green the calls are drawn in. */
+  --hangout: #8a4fb5;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: var(--ink);
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+}
+
+.app {
+  display: flex;
+  height: 100%;
+  overflow: hidden;
+}
+
+.app__error {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: var(--danger);
+  color: white;
+  font-size: 14px;
+}
+
+/* The chips after changes, with Undo (ChangeChip in demos/page.tsx), stacked with the newest at the bottom, where the refused-change notice shows, under them. */
+.change-chips {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  z-index: 999;
+  box-sizing: border-box;
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  /* Only the chips take the pointer, not the gaps between them. */
+  pointer-events: none;
+}
+
+.change-chips__chip {
+  max-width: 100%;
+  pointer-events: auto;
+}
+
+.change-chip {
+  box-sizing: border-box;
+  max-width: 100%;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 8px 8px 14px;
+  border: 1px solid rgb(255 255 255 / 22%);
+  border-radius: 18px;
+  /* A slate that stands out over the light panels and the dark map and Table alike. */
+  background: #3a4556;
+  color: white;
+  font-size: 14px;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 35%);
+}
+
+.change-chip--refused {
+  background: var(--danger);
+}
+
+.change-chip__undo {
+  padding: 3px 10px;
+  border: 1px solid color-mix(in srgb, white 50%, transparent);
+  border-radius: 12px;
+  background: none;
+  color: white;
+  font: 600 13px system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.change-chip__undo:hover {
+  background: color-mix(in srgb, white 15%, transparent);
+}
+
+.change-chip__dismiss {
+  padding: 0 6px;
+  border: none;
+  background: none;
+  color: color-mix(in srgb, white 75%, transparent);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.app__problems {
+  position: fixed;
+  top: 56px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  box-sizing: border-box;
+  width: min(560px, calc(100vw - 32px));
+  max-height: 40vh;
+  overflow-y: auto;
+  padding: 10px 14px;
+  border: 1px solid var(--danger);
+  border-radius: 8px;
+  background: #fef3f2;
+  color: var(--ink);
+  font-size: 14px;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 10%);
+}
+
+.app__problems p {
+  margin: 0 0 6px;
+  font-weight: 600;
+  color: var(--danger);
+}
+
+.app__problems ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.app__problems li + li {
+  margin-top: 4px;
+}
+
+.app__problems code {
+  font-weight: 600;
+}
+
+/* Fields in the person panel */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.notes h3 {
+  margin: 4px 0 8px;
+  font-size: 15px;
+}
+
+/* People panel and the person panel */
+
+.side-panel {
+  box-sizing: border-box;
+  width: 420px;
+  flex: none;
+  height: 100%;
+  overflow-y: auto;
+  padding: 16px 18px 32px;
+  border-left: 1px solid var(--line);
+  background: var(--wash);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.side-panel[hidden] {
+  display: none;
+}
+
+.side-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.side-panel__header h2 {
+  margin: 0;
+  font-size: 20px;
+  overflow-wrap: anywhere;
+}
+
+.side-panel__back {
+  /* Top left, back to the person this one was opened from. */
+  display: inline-flex;
+  padding: 2px;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  cursor: pointer;
+  color: var(--muted);
+}
+
+.side-panel__back:hover {
+  color: var(--ink);
+}
+
+.side-panel__close {
+  /* Top right, whether a heading is beside it (the list) or not (a person). */
+  margin-left: auto;
+  border: none;
+  background: none;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--muted);
+}
+
+.side-panel input,
+.side-panel textarea,
+.people-panel textarea {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 7px 9px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper);
+  color: var(--ink);
+  font: 14px/1.4 system-ui, sans-serif;
+}
+
+.note-editor {
+  resize: vertical;
+  white-space: pre-wrap;
+}
+
+.muted {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+/* A note or draft shown, not edited (PersonParts.tsx and DraftBox.tsx on a read-only page: the demo's). */
+.read-only-text {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.field__hint {
+  font-size: 12px;
+}
+
+.count {
+  display: inline-block;
+  min-width: 18px;
+  margin-left: 6px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--line);
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.button {
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper);
+  color: var(--ink);
+  font: 600 13px system-ui, sans-serif;
+  cursor: pointer;
+  align-self: flex-start;
+}
+
+.button--primary {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: white;
+}
+
+.link-button {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--accent);
+  font: 600 13px system-ui, sans-serif;
+  cursor: pointer;
+  align-self: flex-start;
+}
+
+.tag-chips {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 8px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent) 12%, var(--paper));
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.tag-chip--archive {
+  background: color-mix(in srgb, var(--muted) 16%, var(--paper));
+  color: var(--muted);
+}
+
+.tag-chip--alias {
+  background: color-mix(in srgb, var(--ink) 8%, var(--paper));
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.tag-chip button {
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.tag-editor {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.tag-editor__add {
+  flex: 1;
+  min-width: 140px;
+}
+
+/* Location: one value, with a button to clear it */
+.place-editor {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.place-editor input {
+  flex: 1;
+  min-width: 0;
+}
+
+.place-editor__clear {
+  padding: 0 4px;
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.place-editor__clear:hover {
+  color: var(--ink);
+}
+
+.timeline__marketplace,
+.show-groups,
+.reach-out {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 8px;
+  font-size: 13px;
+}
+
+.timeline__marketplace input,
+.show-groups input,
+.reach-out input {
+  width: auto;
+  margin: 0;
+}
+
+.person-view .show-groups {
+  margin: 0;
+}
+
+.archived-note {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--muted) 12%, var(--paper));
+  color: var(--ink);
+  font-size: 13px;
+}
+
+/* Above the chat in a person's panel: the activity chart, their hangouts and their group chats. */
+.timeline__intro {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 0 10px;
+}
+
+/* All-time closeness (ActivityChart.tsx): a bar a month in closeness points, their messages solid grey above the line (the replies assumed where only your side is kept among them) and yours a darker grey below it, calls and hangouts in quiet tints half each side against the line, on the panel's light background. */
+.activity-chart svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  touch-action: pan-y;
+}
+
+/* Holds the chart's place while it loads, so the chat below does not jump: the chart and the legend. */
+.activity-chart--waiting {
+  aspect-ratio: 380 / 98;
+}
+
+/* The month under the pointer, floating beside it over the chart, so it takes no room at rest. */
+.activity-chart {
+  position: relative;
+}
+
+.activity-chart__tooltip {
+  position: absolute;
+  top: 0;
+  z-index: 2;
+  left: 0;
+  box-sizing: border-box;
+  width: max-content;
+  max-width: min(240px, 70%);
+  padding: 5px 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 12%);
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.3;
+  pointer-events: none;
+}
+
+/* Read by screen readers, not shown. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.activity-chart svg:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.activity-chart__counts {
+  opacity: 0.8;
+}
+
+.activity-chart__bar--calls {
+  fill: color-mix(in srgb, var(--accent) 38%, transparent);
+}
+
+.activity-chart__bar--hangouts {
+  fill: color-mix(in srgb, var(--hangout) 40%, transparent);
+}
+
+.activity-chart__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.activity-chart__legend li {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.activity-chart__key {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  box-sizing: border-box;
+}
+
+.activity-chart__key--them {
+  background: color-mix(in srgb, var(--muted) 42%, transparent);
+}
+
+.activity-chart__key--you {
+  background: color-mix(in srgb, var(--muted) 80%, transparent);
+}
+
+.activity-chart__key--calls {
+  background: color-mix(in srgb, var(--accent) 38%, transparent);
+}
+
+.activity-chart__key--hangouts {
+  background: color-mix(in srgb, var(--hangout) 40%, transparent);
+}
+
+.activity-chart__bar {
+  fill: color-mix(in srgb, var(--muted) 42%, transparent);
+}
+
+.activity-chart__bar--you {
+  fill: color-mix(in srgb, var(--muted) 80%, transparent);
+}
+
+/* The month under the pointer. */
+.activity-chart__month {
+  fill: color-mix(in srgb, var(--muted) 10%, transparent);
+}
+
+.activity-chart__base {
+  stroke: var(--line);
+}
+
+.activity-chart__axis {
+  fill: var(--muted);
+  font-size: 10px;
+}
+
+.platform-badge {
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: #e7f0ff;
+  color: #1f4f99;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.account-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  row-gap: 8px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--ink);
+}
+
+/* Each account is three columns: its platform on one line, its name over its stats (smaller), then its buttons.
+   The rows share the list's columns (subgrid), so every platform chip is as wide as the widest and the names line up. */
+.account-list li {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
+  column-gap: 8px;
+  align-items: center;
+}
+
+.account-list .platform-badge {
+  justify-self: stretch;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.account-list__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.account-list__name,
+.account-list__count {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.account-list__count {
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.account-list__actions {
+  grid-column: 3;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.account-list__open,
+.account-list__detach {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-grid;
+  place-items: center;
+}
+
+.account-list__open:hover,
+.account-list__open:focus-visible,
+.account-list__open[aria-pressed="true"],
+.account-list__detach:hover,
+.account-list__detach:focus-visible {
+  background: var(--line);
+  color: var(--ink);
+}
+
+/* A person's hangouts (catch-ups, CatchUps.tsx): the latest first, each on a light card, then "Add event" or its form. */
+.catch-ups {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--ink);
+}
+
+/* "▸ Hangouts · 2", "▸ Accounts · 4", "▸ Group chats · 3", "▸ Messages · 120": a field's label, as a button that opens and closes it (each closed whenever a person's panel opens; PersonView). */
+.field__toggle {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.field__toggle:hover,
+.field__toggle:focus-visible {
+  color: var(--ink);
+}
+
+/* "▸ Messages · 120" over the person's chat, in a field label's type. */
+.field__toggle.timeline__toggle {
+  display: block;
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.field__toggle.timeline__toggle:hover,
+.field__toggle.timeline__toggle:focus-visible {
+  color: var(--ink);
+}
+
+.catch-ups__add {
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.catch-ups ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.catch-ups__row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 9px;
+  border-radius: 6px;
+  background: var(--wash);
+}
+
+.catch-ups__note {
+  overflow-wrap: anywhere;
+}
+
+.catch-ups__actions {
+  display: flex;
+  gap: 16px;
+  margin-top: 2px;
+}
+
+.catch-ups__delete {
+  color: var(--danger);
+}
+
+.catch-up-form {
+  box-sizing: border-box;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--wash);
+}
+
+.catch-up-form label,
+.catch-up-form__time,
+.catch-up-form__note,
+.catch-up-form__people {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+/* Date, time and hours side by side. */
+.catch-up-form__when {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1.25fr) minmax(0, 0.6fr);
+  gap: 8px;
+}
+
+/* Several days (a trip): a tick box on its own line, the label beside it. */
+.catch-up-form label.catch-up-form__several {
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+}
+
+.catch-up-form__several input {
+  margin: 0;
+}
+
+.catch-up-form__several span {
+  white-space: nowrap;
+}
+
+/* A trip's start and end: a date and a time each, no hours box (the time together is worked out). */
+.catch-up-form__when.catch-up-form__when--trip {
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1.25fr);
+}
+
+/* Each day's private hours: from one time box to another on one line. */
+.catch-up-form__private {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.catch-up-form__private-times {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 400;
+}
+
+/* What the trip comes to: its days and time together. */
+.catch-up-form__trip {
+  margin: 0;
+  font-size: 12px;
+}
+
+/* "No time" after Time's label, once one is set: back to the start of its day. */
+.catch-up-form__no-time {
+  margin-left: 6px;
+  font-size: 0.85em;
+}
+
+/* The time box (CatchUps.tsx TimeBox): one box as the date's beside it, holding the hour, the minutes and am or pm,
+   each without a box of its own; a plain field as the browser draws one, and in the panel as its fields are. */
+.time-box {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding: 1px 2px;
+  border: 1px solid #767676;
+  border-radius: 2px;
+  background: Field;
+  color: FieldText;
+  font: 400 13.333px system-ui, sans-serif;
+}
+
+.side-panel .time-box {
+  padding: 7px 9px;
+  border-color: var(--line);
+  border-radius: 6px;
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 14px/1.4 system-ui, sans-serif;
+}
+
+.time-box:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+
+.catch-up-form .time-box input.time-box__part {
+  box-sizing: content-box;
+  width: 2ch;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  outline: none;
+}
+
+/* The minutes close up to the ":" as the hour does. */
+.catch-up-form .time-box input.time-box__part[aria-label="Minutes"] {
+  text-align: left;
+}
+
+.catch-up-form .time-box input.time-box__part:user-invalid {
+  color: var(--danger);
+}
+
+.time-box__half {
+  margin-left: 6px;
+  padding: 0 2px;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.time-box__half:focus-visible {
+  background: var(--accent);
+  color: var(--paper);
+  outline: none;
+}
+
+/* The note's label on one line, "(if you like)" after it. */
+.catch-up-form .catch-up-form__note > label {
+  display: block;
+}
+
+/* With: the people chosen as chips on the label's line, right after it, wrapping under it when there are many; the
+   field to add someone below. */
+.catch-up-form__with {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+}
+
+.catch-up-form__with > span:first-child {
+  margin-right: 2px;
+}
+
+.catch-up-form__people .tag-chip {
+  font-size: 13px;
+}
+
+/* The field to add someone, and beside it on the same line the unnamed others: "+ [0] others". */
+.catch-up-form__add {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.catch-up-form__add > input {
+  flex: 1;
+  min-width: 0;
+}
+
+.catch-up-form .catch-up-form__others {
+  flex-direction: row;
+  align-items: center;
+  flex: none;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.catch-up-form__others input {
+  width: 4.5em;
+}
+
+.catch-up-form__matches {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper);
+}
+
+.catch-up-form__matches button {
+  width: 100%;
+  padding: 6px 9px;
+  border: none;
+  background: none;
+  color: var(--ink);
+  font: 13px system-ui, sans-serif;
+  text-align: left;
+  cursor: pointer;
+}
+
+.catch-up-form__matches button:hover {
+  background: var(--wash);
+}
+
+.catch-up-form__actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.catch-up-form__actions .button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* The group chats a person is in (PersonGroups.tsx), in their panel's Events. */
+.person-groups {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  font-size: 13px;
+}
+
+.person-groups__title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+/*
+ * The rows share the list's columns (subgrid), so every platform chip is as wide as the widest and the names line up;
+ * the last column holds each row's break-link button.
+ */
+.person-groups ul {
+  list-style: none;
+  margin: 0 -6px;
+  padding: 0;
+  align-self: stretch;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  row-gap: 4px;
+}
+
+.person-groups li {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
+}
+
+/* The platform, centred beside the name with the counts on a line of their own beneath it; the whole row opens the group. */
+.person-groups__row {
+  grid-column: 1 / 3;
+  padding: 3px 6px;
+  display: grid;
+  grid-template-columns: subgrid;
+  align-items: baseline;
+  column-gap: 8px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.person-groups__row:hover {
+  background: var(--paper);
+}
+
+.person-groups__row .platform-badge {
+  grid-row: span 2;
+  align-self: center;
+  justify-self: stretch;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.person-groups__name {
+  overflow-wrap: anywhere;
+}
+
+.person-groups__row:hover .person-groups__name {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+/* A group chat opened in the panel, in place of the person's chat (GroupChat.tsx). */
+.group-chat__back {
+  margin: 0 0 4px;
+}
+
+.group-chat__facts {
+  margin: 0;
+  font-size: 13px;
+}
+
+.group-chat__members {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.group-chat__member {
+  padding: 1px 8px;
+  border: 0;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent) 10%, var(--paper));
+  color: var(--accent);
+  font: 600 12px system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.group-chat__member:hover {
+  background: color-mix(in srgb, var(--accent) 20%, var(--paper));
+}
+
+.group-chat__member--you {
+  border: 1px dashed var(--line);
+  background: none;
+  color: var(--muted);
+  font-weight: 500;
+  cursor: default;
+}
+
+/* Someone you have never changed (untouched.ts): grey, not the accent green of everyone you have. */
+.group-chat__member--untouched {
+  background: color-mix(in srgb, var(--muted) 12%, var(--paper));
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.group-chat__member--untouched:hover {
+  background: color-mix(in srgb, var(--muted) 22%, var(--paper));
+}
+
+.group-chat__member--archived {
+  background: none;
+  color: var(--muted);
+  font-weight: 500;
+  opacity: 0.6;
+}
+
+.group-chat__member--archived:hover {
+  opacity: 1;
+}
+
+.group-chat__archive-untouched {
+  align-self: flex-start;
+  font-size: 13px;
+}
+
+/* An untouched person's name in People's list (untouched.ts). */
+.person-label--untouched {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.group-chat__read-only {
+  margin: 6px 0 0;
+  font-size: 12px;
+}
+
+.person-groups__counts {
+  grid-column: 2;
+  font-size: 12px;
+}
+
+/*
+ * The break-link button at a row's right: shown while the row is pointed at or has keyboard focus (always, faintly, on
+ * a touch screen), and for good, in the accent, once they are unlinked from that group.
+ */
+.person-groups__link {
+  grid-column: 3;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  opacity: 0;
+}
+
+.person-groups__item:hover .person-groups__link,
+.person-groups__item:focus-within .person-groups__link {
+  opacity: 1;
+}
+
+.person-groups__link:hover {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.person-groups__link:focus-visible {
+  opacity: 1;
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.person-groups__link:disabled {
+  cursor: progress;
+}
+
+.person-groups__item--unlinked .person-groups__link {
+  opacity: 1;
+  color: var(--accent);
+}
+
+@media (hover: none) {
+  .person-groups__link {
+    width: 36px;
+    height: 36px;
+    opacity: 0.55;
+  }
+}
+
+/* Review: people who may be the same */
+
+.review {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.review h3,
+.people-panel .notes h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.review__hint {
+  margin: 0;
+  font-size: 12px;
+}
+
+.proposal {
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.proposal__people {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+}
+
+.proposal__person {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--wash);
+  color: var(--ink);
+  font: 13px/1.35 system-ui, sans-serif;
+  text-align: left;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.proposal__evidence {
+  margin: 0;
+  font-size: 13px;
+}
+
+.tier {
+  margin-right: 6px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.tier--high { background: #dcfce7; color: #166534; }
+
+.tier--medium { background: #fef9c3; color: #854d0e; }
+
+.tier--low { background: var(--line); color: var(--muted); }
+
+.proposal__actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Everyone */
+
+.people-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.people-list ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.filter-chip {
+  padding: 3px 10px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--paper);
+  color: var(--ink);
+  font: 500 12px system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.filter-chip--active {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: white;
+}
+
+.filter-chip--active .count {
+  background: rgb(255 255 255 / 25%);
+  color: white;
+}
+
+.person-row {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  padding: 7px 8px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--ink);
+  font: 14px/1.3 system-ui, sans-serif;
+  text-align: left;
+  cursor: pointer;
+}
+
+.person-row:hover {
+  background: var(--paper);
+}
+
+.person-row__name {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.person-row__meta {
+  flex-basis: 100%;
+  font-size: 12px;
+}
+
+.people-list__me {
+  font-size: 12px;
+}
+
+.person-view {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.person-view__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* A field's label with something at its right: Accounts, with Join person. */
+.field__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* Join person: a small link in the label's type; open, a borderless field in the same type, its matches or question just below. */
+.join-person {
+  position: relative;
+  display: flex;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.join-person--open {
+  flex: 1;
+}
+
+.join-person__open {
+  font-size: 12px;
+}
+
+.side-panel .join-person input {
+  width: 100%;
+  /* Overhanging the label's line by its underline, so opening it moves nothing. */
+  height: 17px;
+  margin-block: -1px;
+  padding: 0;
+  border: none;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: none;
+  color: var(--ink);
+  font: 600 12px system-ui, sans-serif;
+  outline: none;
+}
+
+.side-panel .join-person input:focus {
+  border-bottom-color: var(--accent);
+}
+
+.join-person__below {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 5;
+  box-sizing: border-box;
+  width: 300px;
+  max-width: calc(100vw - 36px);
+  margin: 0;
+  padding: 6px 9px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  color: var(--ink);
+  font: 13px system-ui, sans-serif;
+}
+
+ul.join-person__below {
+  list-style: none;
+  padding: 0;
+}
+
+.join-person li button {
+  width: 100%;
+  padding: 6px 9px;
+  border: none;
+  background: none;
+  color: var(--ink);
+  font: 13px system-ui, sans-serif;
+  text-align: left;
+  cursor: pointer;
+}
+
+.join-person li button:hover {
+  background: var(--wash);
+}
+
+/* Timeline */
+
+/*
+ * The chat's own scroll box, newest at the bottom. Reversed, so the browser
+ * keeps its scroll measured from the bottom: it opens there, and older pages
+ * or players loading above leave the reader's place alone (see Timeline.tsx).
+ */
+.timeline__scroller {
+  display: flex;
+  flex-direction: column-reverse;
+  /* Days drawn and measured below the view keep the reader's place by scrolling themselves (Days in Timeline.tsx). */
+  overflow-anchor: none;
+  max-height: 70vh;
+  overflow-y: auto;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.timeline__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 32px;
+}
+
+/* Inside an open "Messages" fold, above the chat: the group-messages switch, and "Load all" at the end of the line. */
+.timeline__tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  margin: 0 0 8px;
+}
+
+.timeline__tools > .timeline__load-all,
+.timeline__tools > .timeline__loading-all {
+  margin-left: auto;
+}
+
+.timeline {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+}
+
+/* The space between days is inside each, so a day's measured height is all the room it takes (see Days in Timeline.tsx). */
+.timeline__day {
+  padding-top: 12px;
+}
+
+.timeline__day h4 {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  text-align: center;
+}
+
+.message {
+  max-width: 85%;
+  margin-bottom: 6px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.message--self {
+  margin-left: auto;
+  background: color-mix(in srgb, var(--accent) 10%, var(--paper));
+  border-color: color-mix(in srgb, var(--accent) 25%, var(--paper));
+}
+
+.message--system {
+  max-width: 100%;
+  background: none;
+  border-style: dashed;
+}
+
+/* What the chat was opened at (a chip in the Table's Who; Timeline.tsx): outlined. The wrapper takes no room, so the bubble lays out as ever. */
+.timeline__mark {
+  display: contents;
+}
+
+.timeline__mark > .message {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* A call among the messages (Timeline.tsx), from the phone's call history or another app's call record: a quieter bubble, a missed one fainter still. */
+.message--call {
+  border-style: dashed;
+}
+
+.message--missed .message__body {
+  color: var(--muted);
+}
+
+/* A catch-up among the messages (ChatCatchUp in CatchUps.tsx), at the start of its day: on neither side, since you
+   were both there, a wash card with an accent edge; the whole of it opens the form. */
+.message--catch-up {
+  margin-inline: auto;
+  background: var(--wash);
+  border-left: 3px solid var(--accent);
+}
+
+.message__catch-up-open {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.message--catch-up .message__body > span {
+  display: block;
+}
+
+.message__catch-up-open:hover .message__catch-up-what strong,
+.message__catch-up-open:focus-visible .message__catch-up-what strong {
+  color: var(--accent);
+}
+
+.message__catch-up-note {
+  overflow-wrap: anywhere;
+}
+
+/* A call's note (CallNoteLine in CatchUps.tsx), on its own line under what the call was. */
+.message__call-note {
+  display: block;
+}
+
+/* Its form, or a new one's, in its place: as wide as the chat, the form's own card in place of the bubble. */
+.message--editing {
+  max-width: 100%;
+  margin-inline: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 13px;
+}
+
+.message--editing .catch-up-form__actions .catch-ups__delete {
+  margin-left: auto;
+}
+
+/* "+ event" on the right of a day's heading, shown as the day is pointed at (always on a touch screen). */
+.timeline__day {
+  position: relative;
+}
+
+.timeline__add-catch-up {
+  position: absolute;
+  top: 12px;
+  right: 0;
+  font-size: 12px;
+  line-height: 15px;
+  opacity: 0;
+}
+
+.timeline__day:hover .timeline__add-catch-up,
+.timeline__add-catch-up:focus-visible {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .timeline__add-catch-up {
+    opacity: 1;
+    color: var(--muted);
+  }
+}
+
+.message__meta {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* The name of the group a message was said in: it opens that group. */
+.message__group {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.message__group:hover {
+  text-decoration: underline;
+}
+
+.message__who {
+  font-weight: 600;
+}
+
+.message__body p {
+  margin: 2px 0 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.message__reactions {
+  margin-top: 2px;
+  font-size: 12px;
+}
+
+.attachment {
+  display: inline-block;
+  margin: 3px 4px 0 0;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--wash);
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.attachment--missing {
+  font-style: italic;
+}
+
+a.attachment {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a.attachment:hover {
+  text-decoration: underline;
+}
+
+/* A fixed height, so thumbnails loading as they scroll into view don't push the timeline about. */
+.attachment-image {
+  display: block;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--wash);
+  cursor: zoom-in;
+}
+
+.attachment-image img {
+  display: block;
+  height: 180px;
+  width: auto;
+  min-width: 80px;
+  max-width: 100%;
+  object-fit: cover;
+}
+
+/* Messenger's like, inline with the text like the emoji it is, a size per how long it was held. Its height is set, so it never shifts the timeline. */
+.attachment-like {
+  display: inline-block;
+  vertical-align: middle;
+  margin: 2px 0 0;
+  width: auto;
+  height: 1.5em;
+  line-height: 1.5em;
+  font-size: inherit;
+}
+
+.attachment-like--medium {
+  height: 2.25em;
+}
+
+.attachment-like--large {
+  height: 3em;
+}
+
+/* A sticker at its own size, whole, shrunk only past the cap; the box's fixed height keeps the timeline from jumping as it loads. */
+.attachment-sticker {
+  display: flex;
+  align-items: flex-start;
+  height: 120px;
+  margin: 0;
+}
+
+.attachment-sticker img {
+  display: block;
+  max-width: 120px;
+  max-height: 120px;
+  object-fit: contain;
+}
+
+.attachment-video {
+  display: block;
+  width: 100%;
+  max-height: 240px;
+  margin-top: 4px;
+  border-radius: 8px;
+  background: #000;
+}
+
+.attachment-audio {
+  display: block;
+  width: 100%;
+  min-width: 200px;
+  height: 36px;
+  margin-top: 4px;
+}
+
+.image-viewer {
+  max-width: 95vw;
+  max-height: 95vh;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-out;
+}
+
+.image-viewer::backdrop {
+  background: rgb(0 0 0 / 0.8);
+}
+
+.image-viewer img {
+  display: block;
+  max-width: 95vw;
+  max-height: 95vh;
+  object-fit: contain;
+}
+
+.timeline__more-row {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.timeline__loading-all {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* "Load all" and its Stop: links, not boxes, unlike the older and newer page buttons. */
+.timeline__load-all {
+  flex: none;
+  align-self: center;
+  white-space: nowrap;
+}
+
+.timeline__load-all:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+.timeline__load-all:disabled {
+  color: var(--muted);
+  cursor: default;
+}
+
+.timeline__more {
+  flex: none;
+  align-self: center;
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+/* The next name beneath a person's name (see displayName). */
+.person-label__full {
+  display: block;
+  font-size: 0.8em;
+  font-weight: normal;
+}
+
+/* Where a name would be while names are hidden, with No name except… (Name in PersonParts.tsx): a faint bar, so a row or button with no name can still be seen and clicked. */
+.name-hidden {
+  display: inline-block;
+  width: 4.5em;
+  height: 0.7em;
+  border-radius: 0.35em;
+  background: currentColor;
+  opacity: 0.22;
+  vertical-align: middle;
+}
+
+/* The composer under the chat (Composer.tsx) */
+
+.composer {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.composer__label {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.composer__state {
+  font-weight: normal;
+}
+
+.composer__state--ok {
+  color: var(--accent);
+}
+
+.composer__text {
+  box-sizing: border-box;
+  width: 100%;
+  resize: vertical;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+  color: var(--ink);
+  font: 14px system-ui, sans-serif;
+}
+
+.composer__text:disabled {
+  background: var(--wash);
+}
+
+.composer__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.composer__row .button {
+  align-self: auto;
+}
+
+.composer__result {
+  min-width: 0;
+  font-size: 13px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.composer__result--sent {
+  color: var(--accent);
+}
+
+.composer__result--failed,
+.composer__result--unconfirmed {
+  color: var(--danger);
+}
+
+/* A person's identicon (Identicon.tsx): rounded, with a faint ring that shows on light and dark alike. */
+.identicon {
+  display: inline-block;
+  flex: none;
+  border-radius: 18%;
+  box-shadow: 0 0 0 1px rgba(128, 138, 160, 0.4);
+  vertical-align: middle;
+}
+
+/* Round, as Orbits draws them and as a contact's photo is: the person panel's icon and its picker's draft. After
+   .identicon, so it wins over its rounded square. */
+.identicon--round {
+  border-radius: 50%;
+}
+
+/* The person panel's names: their identicon in a column of its own, exactly as tall as the Name line, the gap and one
+   row of chips together, top and bottom flush with them. When the chips wrap onto more rows it keeps that size and
+   stays at the top, beside the label and the first row. */
+.person-name {
+  --name-head: 17px;
+  --name-chip: 32px;
+  --name-gap: 4px;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.person-name > .icon-picker .icon-picker__open > .identicon,
+.person-name > .identicon {
+  width: calc(var(--name-head) + var(--name-gap) + var(--name-chip));
+  height: calc(var(--name-head) + var(--name-gap) + var(--name-chip));
+}
+
+.person-name .field__head--name {
+  height: var(--name-head);
+}
+
+.person-name__names {
+  display: flex;
+  flex-direction: column;
+  gap: var(--name-gap);
+  min-width: 0;
+}
+
+/* Their names (NameChips.tsx): a chip for each, as tall as the identicon, wrapping; the first, their name, bolder. */
+.name-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.name-chip {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 32px;
+  max-width: 100%;
+  padding: 0 11px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--ink) 6%, var(--paper));
+  color: var(--ink);
+  font: 500 14px/1 system-ui, sans-serif;
+  overflow-wrap: anywhere;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.name-chip--first {
+  background: color-mix(in srgb, var(--accent) 12%, var(--paper));
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.name-chips[role="list"] > .name-chip[tabindex] {
+  cursor: grab;
+  /* A drag on a chip moves the chip, never the page. */
+  touch-action: none;
+}
+
+.name-chip[tabindex]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.name-chip--dragged {
+  position: relative;
+  z-index: 2;
+  cursor: grabbing;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+}
+
+/* Where a dragged chip would land: a bar at the chip's side it would go before, or after the last. */
+.name-chip--drop-before {
+  box-shadow: -4px 0 0 -1px var(--accent);
+}
+
+.name-chip--drop-after {
+  box-shadow: 4px 0 0 -1px var(--accent);
+}
+
+.name-chip__remove {
+  width: 0;
+  margin-right: -4px;
+  padding: 0;
+  overflow: hidden;
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+}
+
+.name-chip:hover > .name-chip__remove,
+.name-chip:focus-within > .name-chip__remove {
+  width: auto;
+  opacity: 1;
+}
+
+.name-chip__remove:hover {
+  color: var(--ink);
+}
+
+/* A chip written again in place: the chip, with a caret. */
+.side-panel input.name-chip__edit {
+  width: auto;
+  padding: 0 11px;
+  border-color: var(--accent);
+  font: 500 14px/1 system-ui, sans-serif;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.side-panel input.name-chip__edit.name-chip {
+  height: 32px;
+}
+
+/* "Names +", one button opening "add new name" in its place: the label's words and type, its + green, close beside the
+   words and raised a little to sit level with them; no taller than the label. */
+.field__head--name {
+  justify-content: flex-start;
+  gap: 6px;
+}
+
+.side-panel button.add-name-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: 17px;
+  margin-block: -1px;
+  margin-inline: -4px;
+  padding: 0 4px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--muted);
+  font: 600 12px/1 system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.add-name-open__plus {
+  position: relative;
+  top: -1px;
+  color: var(--accent);
+  font-size: 15px;
+}
+
+.side-panel button.add-name-open:hover,
+.side-panel button.add-name-open:focus-visible {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.side-panel input.add-name {
+  width: 9em;
+  min-width: 0;
+  height: 17px;
+  margin-block: -1px;
+  padding: 0;
+  border: none;
+  border-bottom: 1px solid transparent;
+  border-radius: 0;
+  background: none;
+  color: var(--ink);
+  font: 600 12px system-ui, sans-serif;
+  outline: none;
+}
+
+.side-panel input.add-name::placeholder {
+  color: var(--accent);
+}
+
+.side-panel input.add-name:focus {
+  border-bottom-color: var(--accent);
+}
+
+.side-panel input.add-name:focus::placeholder {
+  color: var(--muted);
+}
+
+/* The identicon beside it, a button that opens its picker (IconPicker.tsx) just below: the icon they have and the
+   one drafted side by side, colours, a hue slider, Save and ×. */
+.icon-picker {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+}
+
+.icon-picker__open {
+  display: inline-flex;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+}
+
+.icon-picker__open:focus-visible {
+  outline: none;
+}
+
+.icon-picker__open:focus-visible .identicon,
+.icon-picker__open:hover .identicon,
+.icon-picker__open[aria-expanded="true"] .identicon {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+.icon-picker__box {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 5;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 232px;
+  max-width: calc(100vw - 36px);
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+}
+
+.icon-picker__close {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--muted);
+  font: 20px/1 system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.icon-picker__close:hover {
+  color: var(--ink);
+}
+
+/* The draft, with New picture and New colour beside it. */
+.icon-picker__draft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 4px;
+}
+
+.icon-picker__rerolls {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.icon-picker__reroll {
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--paper);
+  color: var(--ink);
+  font: 600 12px/1.3 system-ui, sans-serif;
+  white-space: nowrap;
+  text-align: left;
+  cursor: pointer;
+}
+
+.icon-picker__reroll:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.icon-picker__swatches {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.icon-picker__swatch {
+  aspect-ratio: 1;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+}
+
+.icon-picker__swatch--on {
+  box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--ink);
+}
+
+.icon-picker__hue {
+  width: 100%;
+  height: 12px;
+  margin: 0;
+  border-radius: 6px;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+
+.icon-picker__hue::-webkit-slider-thumb {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--paper);
+  border-radius: 50%;
+  background: transparent;
+  box-shadow: 0 0 0 1px var(--ink), inset 0 0 0 1px rgba(0, 0, 0, 0.3);
+  -webkit-appearance: none;
+}
+
+.icon-picker__hue::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--paper);
+  border-radius: 50%;
+  background: transparent;
+  box-shadow: 0 0 0 1px var(--ink);
+}
+
+.icon-picker__save {
+  align-self: stretch;
+}
+
+.icon-picker__save:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.person-row__identicon {
+  margin: -2px 6px 0 0;
+}
+
+/* A touch screen. Fields at 16 px, below which an iPhone zooms the page in on
+   focus (and leaves it zoomed), and the person panel's small controls given
+   room for a finger: icon buttons grow to 40 px, and text buttons and chips
+   reach further than they show, through padding their margins take back. */
+@media (pointer: coarse) {
+  .side-panel input,
+  .side-panel textarea,
+  .side-panel select,
+  .people-panel textarea,
+  .time-box,
+  .side-panel .time-box {
+    font-size: 16px;
+  }
+
+  .side-panel .join-person input,
+  .side-panel input.add-name {
+    font-size: 16px;
+  }
+
+  .side-panel input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+  }
+
+  .timeline__marketplace,
+  .show-groups,
+  .reach-out {
+    min-height: 32px;
+    gap: 8px;
+  }
+
+  .side-panel__close,
+  .side-panel__back {
+    display: inline-grid;
+    place-items: center;
+    min-width: 40px;
+    min-height: 40px;
+    margin-block: -8px;
+  }
+
+  .side-panel__close {
+    margin-right: -10px;
+    font-size: 28px;
+  }
+
+  .side-panel__back {
+    margin-left: -10px;
+  }
+
+  .account-list__open,
+  .account-list__detach {
+    width: 36px;
+    height: 36px;
+    margin-block: -7px;
+  }
+
+  .link-button,
+  .place-editor__clear {
+    padding-block: 8px;
+    margin-block: -8px;
+  }
+
+  .place-editor__clear {
+    padding-inline: 10px;
+  }
+
+  .tag-chip button {
+    padding: 6px 8px;
+    margin: -6px -8px -6px -4px;
+  }
+
+  .group-chat__member {
+    padding: 5px 10px;
+    font-size: 13px;
+  }
+
+  .button,
+  .timeline__more {
+    min-height: 36px;
+  }
+
+  .change-chip__undo {
+    min-height: 32px;
+  }
+
+  .catch-up-form__matches button {
+    min-height: 40px;
+  }
+
+  .change-chip__dismiss {
+    min-width: 36px;
+    min-height: 36px;
+  }
+
+  .filter-chip {
+    min-height: 32px;
+  }
+}
+
+/* A call record's length, added or changed by you (Timeline.tsx, CallRecord). */
+.message__call-length {
+  margin-left: 4px;
+  font-size: 12px;
+}
+
+.message__call-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  margin-top: 2px;
+}
+
+.message__call-form input {
+  width: 5em;
+  font: inherit;
+}
+
+.message__call-form .link-button {
+  align-self: center;
+  font-size: 12px;
+}
+
+.message__call-form .link-button:disabled {
+  color: var(--muted);
+  cursor: default;
+}
+
+/* The draft box under the chat (DraftBox.tsx), in the composer's place and style. */
+.draft-box__state--failed {
+  color: var(--danger);
+}
+
+/* Add event's kinds at the top of its form (CatchUps.tsx): Call | Hangout, as one segmented toggle. */
+.event-kind {
+  display: inline-flex;
+  align-self: flex-start;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--paper);
+}
+
+.event-kind button {
+  padding: 5px 14px;
+  border: none;
+  border-left: 1px solid var(--line);
+  background: none;
+  color: var(--ink);
+  font: 600 13px system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.event-kind button:first-child {
+  border-left: none;
+}
+
+.event-kind button[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--paper);
+}
+
+/* What a hangout made a call loses (its unnamed others), under the people. */
+.catch-up-form__dropped {
+  margin: 0;
+  font-size: 12px;
+}
+
+/* A call's date, time and length: the length needs room for "25 or 1:30". */
+.catch-up-form__when--call {
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.1fr) minmax(0, 0.9fr);
+}
+
+/* Someone on a call: their chip says what it was on with them, a badge and ▾ that opens the choices under the With
+   line (.call-on), the open chip marked. */
+.call-chip {
+  max-width: 100%;
+  min-width: 0;
+}
+
+.call-chip > :first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.call-chip--open {
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.tag-chip .call-chip__on {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+/* What a call may be on with the open chip's person, under the With line: "Ada on", then each account (or app) a chip. */
+.call-on {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--ink) 3%, var(--paper));
+}
+
+.call-accounts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.call-accounts__account {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  min-width: 0;
+  padding: 5px 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper);
+  color: var(--ink);
+  font: 13px/1.3 system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.call-accounts__account[aria-checked="true"] {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.call-accounts__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+
+/* In place of the app, when it cannot use its backend (BackendRefused.tsx) or none answers (NoBackend.tsx). */
+.backend-refused {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 15vh 24px 24px;
+  line-height: 1.5;
+}
+
+.backend-refused h1 {
+  font-size: 1.3rem;
+}
+
+.backend-refused code {
+  background: var(--wash);
+  padding: 0 4px;
+  border-radius: 4px;
+}
+
+.backend-refused a {
+  color: inherit;
+}
+
+.backend-refused__why {
+  color: var(--muted);
+  font-size: 0.9em;
+}

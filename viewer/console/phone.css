@@ -1,0 +1,177 @@
+/* The console's shell on a phone (Console.tsx), laid out from the bottom up: the bar (the life archive's mark at the
+   left, the current page's name at the right, which opens the list of pages), the page's tabs in one row above it, and
+   the surface filling the rest. The bar and the tabs are rows of the console's grid, not of the surface, so they stay
+   put while it scrolls. Loaded after console.css, whose tokens it uses and whose desk rules it overrides; how the
+   blocks themselves reflow on a phone stays in console.css. */
+
+@media (max-width: 899px) {
+  .console {
+    --c-bar: 56px;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto auto;
+  }
+
+  .console__rail {
+    display: none;
+  }
+
+  /* The list of pages: the rail as a dropdown rising from the page button at the bar's right, over the tabs and the
+     surface, its own head left out (the mark is in the bar); it scrolls when the pages outgrow the screen. */
+  .console--menu .console__rail {
+    display: flex;
+    position: fixed;
+    z-index: 30;
+    right: calc(10px + env(safe-area-inset-right));
+    bottom: calc(var(--c-bar) + env(safe-area-inset-bottom) + 6px);
+    width: min(280px, calc(100vw - 20px));
+    max-height: calc(100dvh - var(--c-bar) - env(safe-area-inset-bottom) - env(safe-area-inset-top) - 24px);
+    padding: 8px;
+    gap: 2px;
+    background: var(--c-surface);
+    border: 1px solid var(--c-line-2);
+    border-radius: 16px;
+    box-shadow: 0 18px 48px -12px rgba(0, 0, 0, 0.28), 0 2px 8px rgba(0, 0, 0, 0.06);
+    transform-origin: bottom right;
+  }
+
+  .console--dark.console--menu .console__rail {
+    background: var(--c-surface-2);
+    box-shadow: 0 18px 48px -8px rgba(0, 0, 0, 0.9);
+  }
+
+  .console--menu .console__brand {
+    display: none;
+  }
+
+  .console__rail .console__item {
+    padding: 10px 12px;
+  }
+
+  .console__rail-foot {
+    margin-top: 6px;
+    padding: 8px 0 0;
+    border-top: 1px solid var(--c-line);
+  }
+
+  .console__rail-foot .console__jump kbd {
+    display: none;
+  }
+
+  .console--menu .console__scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 29;
+    background: rgba(0, 0, 0, 0.25);
+  }
+
+  /* The bar, above the scrim so its page button closes the list it opened. */
+  .console__bar {
+    position: relative;
+    z-index: 31;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    height: calc(var(--c-bar) + env(safe-area-inset-bottom));
+    padding: 0 calc(10px + env(safe-area-inset-right)) env(safe-area-inset-bottom) calc(16px + env(safe-area-inset-left));
+    background: var(--c-rail);
+    border-top: 1px solid var(--c-line);
+  }
+
+  .console__bar-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: -0.01em;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  /* The page button; `.console` first, past the shell's button reset. */
+  .console .console__page {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    max-width: 62%;
+    height: 38px;
+    padding: 0 10px 0 12px;
+    border: 1px solid var(--c-line-2);
+    border-radius: 11px;
+    background: var(--c-surface);
+    font-weight: 500;
+    font-size: 14px;
+  }
+
+  .console .console__page[aria-expanded="true"] {
+    border-color: var(--c-accent-line);
+    background: var(--c-accent-soft);
+  }
+
+  .console__page > span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .console .console__page .icon {
+    color: var(--c-accent);
+  }
+
+  /* Up while closed (the list opens upward), down while open. */
+  .console .console__page .console__page-chevron {
+    width: 14px;
+    height: 14px;
+    color: var(--c-muted);
+    transform: rotate(180deg);
+    transition: transform 0.2s ease;
+  }
+
+  .console .console__page[aria-expanded="true"] .console__page-chevron {
+    transform: none;
+  }
+
+  /* The tabs, the bar's row above it: the line on their top, the current one marked along it, toward the surface;
+     faded at the edges where more of them scroll sideways. */
+  .console__tabs {
+    padding: 0 16px;
+    background: var(--c-page);
+    border-bottom: 0;
+    border-top: 1px solid var(--c-line);
+    mask-image: linear-gradient(to right, transparent, #000 14px, #000 calc(100% - 14px), transparent);
+  }
+
+  .console__tab {
+    margin: -1px 0 0;
+    padding: 11px 10px 12px;
+    border-bottom: 0;
+    border-top: 2px solid transparent;
+    font-size: 14px;
+  }
+
+  .console__tab.is-current {
+    border-top-color: var(--c-accent);
+  }
+}
+
+@media (max-width: 899px) and (prefers-reduced-motion: no-preference) {
+  .console--menu .console__rail {
+    animation: console-list-open 0.18s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  @keyframes console-list-open {
+    from {
+      opacity: 0;
+      transform: translateY(6px) scale(0.97);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "life-archive-shopping",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "The life archive's shopping module: what the owner's suppliers have on special, pulled from their public storefronts each morning, in one page.",
+  "lifeArchive": true,
+  "lifeArchiveReady": false
+}

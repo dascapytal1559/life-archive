@@ -1,0 +1,46 @@
+/* Orbits 3D (Orbits3D.tsx): Orbits' own styles (orbits.css) draw its rings and names; this is the three
+   layers it is drawn on, stacked and centred in the stage as Orbits' map is (orbits.css), so the drawing slides with
+   the map's centre while the docked panel moves, never narrower than the map. */
+.demos__stage > .orbits-3d {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  /* Dragging pans the sky, or turns it (Orbits3D.tsx), rather than scrolling or zooming the page. */
+  touch-action: none;
+  user-select: none;
+}
+
+/* Zoomed in, people pass under the header: they fade out under it rather than crowd its controls. The fade is on
+   each layer, not on the whole view: Chrome draws nothing of a masked element that holds a WebGL canvas. */
+.orbits-3d canvas,
+.orbits-3d svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  mask-image: linear-gradient(to bottom, transparent calc(var(--header, 76px) - 56px), #000 calc(var(--header, 76px) - 12px));
+}
+
+/* The text and the ground never take the pointer: the whole view does. */
+.orbits-3d svg {
+  pointer-events: none;
+  overflow: visible;
+}
+
+/* A browser with no WebGL 2: said so in the middle of the stage. */
+.orbits-3d__status {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 320px;
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: rgba(10, 16, 32, 0.8);
+  border: 1px solid var(--faint);
+  color: var(--dim);
+  font-size: 13px;
+  text-align: center;
+}

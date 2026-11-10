@@ -1,0 +1,9 @@
+{
+  "name": "life-archive-inspirations",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "The life archive's inspirations module: the things its owner keeps (a post, a video, a page, a photo), each with their caption and tags and the AI's tags apart, captured from a phone's share sheet or the command line.",
+  "lifeArchive": true,
+  "lifeArchiveReady": false
+}

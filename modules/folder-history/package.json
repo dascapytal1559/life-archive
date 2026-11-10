@@ -1,0 +1,9 @@
+{
+  "name": "life-archive-folder-history",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "The life archive's folder history: a private git history, kept in the archive's folder, of folders it does not own (a shared Google Drive folder, say), recorded by the server as each folder changes.",
+  "lifeArchive": true,
+  "lifeArchiveReady": true
+}

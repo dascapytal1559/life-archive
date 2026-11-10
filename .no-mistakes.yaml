@@ -1,0 +1,26 @@
+# no-mistakes reads this from main, in a run's own worktree: tracked files only, so no data/, no .env.local and no
+# node_modules. The archive's folder there is the worktree's empty data/, never the real one.
+
+# This repository has no working CI (no workflows run on its forge), so the CI step must not wait for checks.
+no_ci: true
+
+commands:
+  # npm test stops on any Node but the pinned one (.node-version, server/nodeVersion.ts), and a daemon's PATH may find
+  # another: tools/pinned-node.sh puts the pinned one first, from whichever version manager has it installed.
+  prepare: . tools/pinned-node.sh && npm ci --prefer-offline --no-audit --no-fund
+  # The whole suite on purpose: with no CI, nothing else runs it. About three minutes.
+  test: . tools/pinned-node.sh && npm run typecheck && npm test
+
+test:
+  instructions: |
+    Use only testing data. To drive the product, build a folder from the made-up testing data under a temporary
+    directory and run a server of your own on it, on a spare port (docs/running.md's "Running"; another if 4651 is taken):
+
+      . tools/pinned-node.sh
+      npm run testing-data -- "$TMPDIR/life-archive-testing"
+      LIFE_ARCHIVE_DATA="$TMPDIR/life-archive-testing" LIFE_ARCHIVE_URL=http://127.0.0.1:4651 npm start
+
+    Friend Map is served by that same server, under /friend-map/, over the same testing data.
+    Never open the owner's own checkout or the archive's folder (~/life-archive-data, or wherever LIFE_ARCHIVE_DATA
+    names), never call the running server on its port (4650 unless LIFE_ARCHIVE_URL says), and never restart the
+    archive's server or any other launchd agent. Stop any server you started before you finish.

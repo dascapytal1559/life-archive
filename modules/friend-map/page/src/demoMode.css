@@ -1,0 +1,26 @@
+/* The demo (DemoMode.tsx, the static demo's): a quiet note hanging from the top edge
+   of the map, over everything and taking no clicks, on every view, wide or
+   phone. It is placed in the map (Demos.tsx), so it is centred on the map and
+   slides with it as the person panel docks beside it; demos.css centres it
+   beside the frozen views' floating panel, and on a phone, where the panel
+   covers the whole screen, on the screen. It is short enough to sit in the
+   header's top padding, above the find box and Methodology, so the header
+   and the map below it keep their room; beside it on the left are only the
+   crumb and the title, which end well short of the middle. */
+
+.demo-mode {
+  position: absolute;
+  left: 50%;
+  top: env(safe-area-inset-top);
+  z-index: 1000;
+  transform: translateX(-50%);
+  padding: 1px 10px 2px;
+  border: 1px solid rgb(255 255 255 / 0.12);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  background: rgb(10 14 28 / 0.72);
+  color: rgb(226 230 240 / 0.8);
+  font: 500 11px/1.2 system-ui, -apple-system, "Segoe UI", sans-serif;
+  white-space: nowrap;
+  pointer-events: none;
+}

@@ -1,0 +1,210 @@
+/* Daily rituals' whole run (RunRows.tsx), in the console's tokens (console.css's --c-*), so it reads the same by day
+   and at night. Today is a column of its own at the left, on a faint panel, then a gap, then the days before it as thin
+   ticks filling the rest of the width, yesterday beside today and the oldest day at the right. Colour only where it
+   means something: done is the console's green (--c-in), not done its red (--c-out), today still going a hollow
+   outline, a day it was not asked a grey dot (a closed day with no answer is a not done, the red). The look is take D's of the
+   layout takes, with today carved out of it. */
+
+.run {
+  --run-today: 44px;
+  --run-gap: 10px;
+  position: relative;
+}
+
+.run__rows {
+  position: relative;
+}
+
+/* Today's column: a panel behind each row's today mark, from the axis to the last row. */
+.run__rows::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: var(--run-today);
+  border-radius: 8px;
+  background: var(--c-surface-2);
+  box-shadow: inset 0 0 0 1px var(--c-line);
+}
+
+.run__row {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--run-today) minmax(0, 1fr);
+  column-gap: var(--run-gap);
+}
+
+.run__today {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 9px;
+}
+
+.run__today--head {
+  align-items: center;
+  padding: 6px 0;
+  font-family: var(--c-mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--c-muted);
+}
+
+/* The axis: the newest day shown, its date running right from its left edge, and the Mondays there is room to name, each
+   date running left from the right edge of its Monday, which is where its week begins, over that week. */
+.run__axis {
+  position: relative;
+  align-self: end;
+  height: 16px;
+  margin-bottom: 4px;
+}
+
+.run__axis i {
+  position: absolute;
+  bottom: 0;
+  font-family: var(--c-mono);
+  font-size: 10px;
+  font-style: normal;
+  line-height: 16px;
+  color: var(--c-faint);
+  white-space: nowrap;
+}
+
+.run__tick--start {
+  padding-left: 3px;
+  border-left: 1px solid var(--c-line);
+}
+
+.run__tick--end {
+  padding-right: 3px;
+  border-right: 1px solid var(--c-line);
+}
+
+.run__history {
+  min-width: 0;
+  padding: 8px 0 9px;
+  border-top: 1px solid var(--c-line);
+}
+
+/* The row's name and count at its newest end, the left, beside today. */
+.run__label {
+  display: flex;
+  align-items: baseline;
+  margin-bottom: 5px;
+  font-size: 13px;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.run__name {
+  flex: 0 1 auto;
+  min-width: 0;
+  margin-right: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--c-text);
+}
+
+.run__count {
+  flex: none;
+  font-family: var(--c-mono);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--c-muted);
+}
+
+/* A day a column, all of them sharing the width. */
+.run__days {
+  display: grid;
+  grid-template-columns: repeat(var(--n), minmax(0, 1fr));
+  height: 14px;
+}
+
+.run__day {
+  display: flex;
+  justify-content: center;
+  cursor: default;
+}
+
+.run__day i {
+  width: calc(100% - 2px);
+  min-width: 2px;
+  max-width: 8px;
+  height: 100%;
+  border-radius: 3px;
+}
+
+/* Where each week begins, a faint seam: at the right of its Monday, the days running newest first. */
+.run__day--monday {
+  box-shadow: inset -1px 0 0 var(--c-line);
+}
+
+.run__day--done i,
+.run__now--done {
+  background: var(--c-in);
+}
+
+.run__day--not-done i,
+.run__now--not-done,
+.run__day--late i,
+.run__now--late,
+.run__now--overdue {
+  background: var(--c-out);
+}
+
+/* A wind-down ticked with no time: done, but not judged against midnight, so no colour. */
+.run__day--untimed i,
+.run__now--untimed {
+  background: var(--c-muted);
+}
+
+.run__day--open i,
+.run__now--open {
+  box-sizing: border-box;
+  border: 1.5px solid var(--c-muted);
+}
+
+/* Not asked: a grey dot of a tick's own size and shape, not counted. */
+.run__day--not-asked i,
+.run__now--not-asked {
+  background: var(--c-faint);
+  opacity: 0.5;
+}
+
+.run__day--pointed i,
+.run__now.run__day--pointed {
+  outline: 1.5px solid var(--c-text);
+  outline-offset: 1px;
+}
+
+/* Today's mark: wider than a day of the run, so it reads first. */
+.run__now {
+  display: block;
+  width: 12px;
+  height: 14px;
+  border-radius: 3px;
+  cursor: default;
+}
+
+/* A phone (the console's breakpoint): a narrower today column and gap, taller ticks. */
+@media (max-width: 899px) {
+  .run {
+    --run-today: 38px;
+    --run-gap: 6px;
+  }
+
+  .run__label {
+    font-size: 12px;
+  }
+
+  .run__days,
+  .run__now {
+    height: 16px;
+  }
+
+  .run__day i {
+    border-radius: 1.5px;
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "life-archive-exercise",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "The life archive's exercise module: every workout from every source, one activity each, with its route on a map kept on this Mac, its trusted heart rate and splits; its own database, its Polar connectors and its tab on the Events page.",
+  "lifeArchive": true,
+  "lifeArchiveReady": false
+}

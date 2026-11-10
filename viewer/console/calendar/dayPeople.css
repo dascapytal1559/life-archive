@@ -1,0 +1,234 @@
+/* The day's People (DayPeople.tsx), in the console's tokens, after the mock the captain picked from (option A): a list
+   wide enough to read a chat in on a desk, a chat opening under its row; on a phone the strip of people, and the chat
+   opening under it. And + Hangout, + Call over the day's list (DayView.tsx). */
+
+/* On a desk the People list is wide enough to read a chat in. */
+@media (min-width: 900px) {
+  .cal .cal-dayv__body {
+    grid-template-columns: minmax(0, 1fr) 440px;
+  }
+}
+
+.cal-dayv__people h3 {
+  align-items: center;
+}
+
+.cal-dayv__people .cal-people__sub {
+  margin-top: 16px;
+}
+
+/* Add on the day, beside the stepping. */
+.cal-dayv__step-buttons .cal-dayv__add {
+  width: auto;
+  padding: 0 9px;
+  gap: 3px;
+  font-size: 12px;
+  color: var(--c-text);
+  white-space: nowrap;
+}
+
+.cal-dayv__step-buttons .cal-dayv__add + button:not(.cal-dayv__add) {
+  margin-left: 6px;
+}
+
+/* The switch for the people Friend Map hides, at the right of the heading. */
+.cal .cal-hidden-switch {
+  margin-left: auto;
+  height: 22px;
+  padding: 0 9px;
+  border: 1px solid var(--c-line-2);
+  border-radius: 999px;
+  color: var(--c-muted);
+  font-size: 11.5px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.cal .cal-hidden-switch:hover {
+  color: var(--c-text);
+  border-color: var(--c-faint);
+}
+
+.cal .cal-hidden-switch[aria-pressed="true"] {
+  border-color: var(--c-accent-line);
+  background: var(--c-accent-soft);
+  color: var(--c-accent);
+}
+
+/* Someone shown though Friend Map hides them. */
+.cal-person.is-hidden .cal-person__name {
+  color: var(--c-muted);
+}
+
+/* A row as the head of its chat: a chevron that turns as it opens. */
+.cal .cal-person .cal-person__chev {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--c-faint);
+  transition: transform 0.15s ease;
+}
+
+.cal-chat.is-open > .cal-person .cal-person__chev {
+  transform: rotate(180deg);
+}
+
+.cal-chat.is-open > .cal-person .cal-person__note {
+  color: var(--c-muted);
+}
+
+/* A group chat's face: its mark in place of initials. */
+.cal .cal-face--group {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--c-surface-2);
+  border-color: var(--c-line-2);
+}
+
+.cal .cal-face--group .icon {
+  width: 12px;
+  height: 12px;
+  color: var(--c-muted);
+}
+
+/* The chat open under its row. */
+.cal-chat__open {
+  margin: 2px 0 10px 4px;
+  padding: 2px 0 2px 14px;
+  border-left: 1px solid var(--c-line-2);
+}
+
+.cal-chat__acts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 2px 0 6px;
+}
+
+.cal .cal-chat__act {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 9px;
+  border: 1px solid var(--c-line-2);
+  border-radius: 999px;
+  color: var(--c-muted);
+  font-size: 11.5px;
+}
+
+.cal .cal-chat__act:hover {
+  color: var(--c-text);
+  border-color: var(--c-faint);
+}
+
+.cal .cal-chat__act.is-on {
+  border-color: var(--c-accent-line);
+  background: var(--c-accent-soft);
+  color: var(--c-accent);
+}
+
+.cal .cal-chat__act .icon {
+  width: 11px;
+  height: 11px;
+}
+
+.cal-chat__none {
+  margin: 4px 0;
+  color: var(--c-faint);
+  font-size: 12px;
+}
+
+.cal .cal-chat__more {
+  margin: 4px 0 2px;
+  padding: 0;
+  color: var(--c-accent);
+  font-size: 12px;
+}
+
+/* What the day's counts hold, in one line under the list. */
+.cal-count-line {
+  margin: 14px 0 0;
+  color: var(--c-faint);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+@media (max-width: 899px) {
+  /* The chat opened from the People strip, under it and over the day's events. */
+  .cal-chat__open.cal-strip-chat {
+    margin: 10px 16px 0 0;
+    padding: 9px 12px 6px;
+    border: 1px solid var(--c-line);
+    border-radius: 12px;
+    background: var(--c-surface-2);
+  }
+
+  .cal-strip-chat__head {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 4px;
+    font-size: 12px;
+    color: var(--c-muted);
+  }
+
+  .cal-strip-chat__head strong {
+    color: var(--c-text);
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .cal-strip-chat__head span {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .cal .cal-strip-chat__close {
+    flex: none;
+    align-self: center;
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 7px;
+    color: var(--c-muted);
+  }
+
+  .cal .cal-strip-chat__close .icon {
+    width: 13px;
+    height: 13px;
+  }
+
+  .cal-dayv__people h3 {
+    padding-right: 16px;
+  }
+
+  .cal-dayv__people-list > .cal-chat {
+    flex: none;
+  }
+
+  /* The strip's chips keep to one line each; the one open is lit. */
+  .cal-dayv__people .cal-person .cal-person__chev {
+    display: none;
+  }
+
+  .cal-dayv__people .cal-chat.is-open > .cal-person {
+    background: var(--c-accent-soft);
+    border-color: var(--c-accent-line);
+  }
+
+  .cal-count-line {
+    margin-right: 16px;
+  }
+
+  .chat-line {
+    grid-template-columns: 54px 40px minmax(0, 1fr);
+  }
+}

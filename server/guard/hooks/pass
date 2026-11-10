@@ -1,0 +1,4 @@
+#!/bin/sh
+# The life archive's privacy guard (its docs/guard.md's "The privacy guard") checks nothing here: each hook linked to this runs
+# the repository's own by its name, if it has one.
+exec "$(dirname "$0")/chain" "$(basename "$0")" "$@"

@@ -1,0 +1,359 @@
+/* Orbits. Colours come from the .demos variables
+   (demos.css) and palette.ts. */
+
+/* While the docked panel slides in or out, the map is drawn again once, not a
+   frame at a time, and is never narrower than its stage (mapSize.ts): at its
+   new size from the frame the stage starts to grow, at its old one until the
+   stage has finished shrinking. Centred in the stage, the drawing slides
+   meanwhile with the map's centre, in step with the panel (both move on
+   --dock-move), its overflow under the panel or past the window's edge. At rest
+   the drawing fills the stage, so this moves nothing. */
+.demos__stage > svg.orbits {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  /* Dragging pans the map (Orbits.tsx), rather than scrolling or zooming the page. */
+  touch-action: none;
+  /* Zoomed in, people pass under the header: they fade out under it rather than crowd its controls. Unzoomed, nobody is there. */
+  mask-image: linear-gradient(to bottom, transparent calc(var(--header, 76px) - 56px), #000 calc(var(--header, 76px) - 12px));
+}
+
+/* The names, an SVG of their own over the sky's (Orbits.tsx): the pointer goes through them to the sky, and as a
+   layer of their own (will-change) they are not painted again whenever the sky is (a hover, the Spider web's flowing links). */
+.demos__stage > svg.orbits__name-layer {
+  pointer-events: none;
+  will-change: transform;
+}
+
+/* The people's marks, an SVG of their own between the sky's and the names' (Orbits.tsx), and whoever is picked out
+   over them: the pointer goes through both. As a layer of its own (will-change), the people's is dimmed while someone
+   is picked out (its opacity, set where it is drawn) without being painted again. */
+.demos__stage > svg.orbits__people {
+  pointer-events: none;
+  will-change: opacity;
+}
+
+.demos__stage > svg.orbits__lit {
+  pointer-events: none;
+}
+
+.orbits__rings circle,
+.orbits__rings ellipse {
+  fill: none;
+  stroke: rgba(200, 214, 255, 0.075);
+  stroke-width: 1;
+}
+
+.orbits__rings text {
+  fill: rgba(141, 151, 173, 0.75);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  paint-order: stroke;
+  stroke: var(--night);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.orbits__rings .orbits__own-ring {
+  stroke: rgba(232, 238, 252, 0.28);
+  stroke-dasharray: 2 4;
+}
+
+.orbits__sun {
+  pointer-events: none;
+}
+
+.orbits__you {
+  fill: var(--night);
+  font: italic 500 13px var(--serif);
+  pointer-events: none;
+}
+
+.orbits__links line {
+  stroke: rgba(232, 238, 252, 0.4);
+  stroke-linecap: round;
+  pointer-events: none;
+}
+
+.orbits__glow,
+.orbits__body,
+.orbits__bubble {
+  pointer-events: none;
+}
+
+/* Each name's fill is its person's identicon colour (glowColour in orbitsLayout.ts), set where it is drawn. */
+.orbits__name {
+  font: 400 12.5px var(--serif);
+  paint-order: stroke;
+  stroke: rgba(7, 11, 22, 0.9);
+  stroke-width: 3.5px;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.orbits__name--minor {
+  font-size: 10.5px;
+}
+
+.orbits__name--focus {
+  font-weight: 600;
+}
+
+/*
+  A strong Reach-out glow breathes (reachGlow.ts): a marker's glow swells to --swell its size, a name's halo from
+  --glow-rest to --glow-peak, both set where they are drawn (Orbits.tsx). Still with reduced motion.
+*/
+.orbits__glow--pulse {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: orbits-reach-swell 1.2s ease-in-out infinite alternate;
+}
+
+.orbits__name--pulse {
+  animation: orbits-reach-halo 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes orbits-reach-swell {
+  to {
+    transform: scale(var(--swell));
+  }
+}
+
+@keyframes orbits-reach-halo {
+  from {
+    filter: var(--glow-rest);
+  }
+  to {
+    filter: var(--glow-peak);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orbits__glow--pulse,
+  .orbits__name--pulse {
+    animation: none;
+  }
+}
+
+/* Friend circles, while chosen: a faint arc round the outside of each, and its name; whoever's is picked out, brighter. */
+.orbits__circles {
+  pointer-events: none;
+}
+
+.orbits__circle {
+  fill: none;
+  stroke: rgba(200, 214, 255, 0.22);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.orbits__circle--lit {
+  stroke: rgba(232, 238, 252, 0.6);
+}
+
+.orbits__circles text {
+  fill: rgba(141, 151, 173, 0.85);
+  font-size: 10px;
+  font-style: italic;
+  letter-spacing: 0.06em;
+  paint-order: stroke;
+  stroke: var(--night);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+}
+
+.orbits__circles text.orbits__circle--lit {
+  fill: var(--star);
+  stroke: var(--night);
+}
+
+/* Your photo in place of the sun (SunPhoto.tsx), ringed in your colour, with the sun's glow still round it. */
+.orbits__photo {
+  pointer-events: none;
+}
+
+.orbits__photo-ring {
+  fill: none;
+  stroke: var(--me);
+  stroke-width: 1.5;
+  stroke-opacity: 0.85;
+  pointer-events: none;
+}
+
+/* Its buttons: "+" in the middle of the sun, "×" on the photo's edge, shown while the sun is hovered or tapped. */
+.orbits-me {
+  position: absolute;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.orbits-me button {
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(244, 184, 96, 0.7);
+  background: rgba(10, 16, 32, 0.78);
+  color: var(--star);
+  backdrop-filter: blur(4px);
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease 80ms;
+}
+
+.orbits-me--shown button,
+.orbits-me:focus-within button {
+  opacity: 1;
+  pointer-events: auto;
+  transition-delay: 0ms;
+}
+
+.orbits-me button:disabled {
+  cursor: default;
+}
+
+.orbits-me__add {
+  width: 26px;
+  height: 26px;
+  transform: translate(-50%, -50%);
+  font-size: 18px;
+  line-height: 1;
+}
+
+.orbits-me__remove {
+  width: 18px;
+  height: 18px;
+  transform: translate(-50%, -50%);
+  font-size: 13px;
+  line-height: 1;
+}
+
+.orbits-me button:hover:not(:disabled) {
+  border-color: var(--me);
+}
+
+.orbits-me__problem {
+  position: absolute;
+  top: 22px;
+  left: 0;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: 240px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: rgba(10, 16, 32, 0.9);
+  border: 1px solid var(--faint);
+  color: var(--star);
+  font-size: 12px;
+  text-align: center;
+  pointer-events: auto;
+}
+
+/* A finger: buttons big enough to tap. */
+@media (pointer: coarse) {
+  .orbits-me__add {
+    width: 36px;
+    height: 36px;
+  }
+
+  .orbits-me__remove {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+/* The Spider web view (Orbits.tsx with the web look, in Amber or a custom colour, webColour.ts):
+   two canvases round the SVG (WebLayer.tsx), one under it with the ground, the
+   web, the halos, the spider and its threads, one over it with the beam and
+   reticle of whoever is looked at, hovered or selected, above everything; each sits exactly where the SVG
+   does and takes no pointer. The SVG keeps the people and their names, restyled
+   below. */
+.demos__stage > canvas.orbits-web {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  display: block;
+  pointer-events: none;
+}
+
+/* The Spider web's colours (--web-accent, --web-ring, --web-link, --web-circle) are set on the SVG from its theme (webTheme.ts). */
+
+/* The drone at the hub is you: no "you" on the sun. The guide rings stay, faint, so the bands keep their meaning. */
+.orbits--web .orbits__you {
+  display: none;
+}
+
+.orbits--web .orbits__rings circle {
+  stroke: var(--web-ring);
+  stroke-dasharray: 3 5;
+}
+
+.orbits--web .orbits__rings text {
+  fill: var(--web-accent);
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  stroke: none;
+}
+
+.orbits--web .orbits__rings .orbits__own-ring {
+  stroke: rgba(255, 255, 255, 0.35);
+  stroke-dasharray: 1 5;
+}
+
+.orbits--web .orbits__name {
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  stroke: rgba(3, 4, 12, 0.92);
+  stroke-width: 3.2px;
+}
+
+.orbits--web .orbits__name--minor {
+  font-size: 9.5px;
+}
+
+.orbits--web .orbits__name--focus {
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.55));
+}
+
+/* The held person's links to their group chats' people flow outward from them. */
+.orbits--web .orbits__links line {
+  stroke: var(--web-link);
+  stroke-dasharray: 4 4;
+  stroke-linecap: round;
+  animation: orbits-web-flow 0.5s linear infinite;
+}
+
+@keyframes orbits-web-flow {
+  to {
+    stroke-dashoffset: -8;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orbits--web .orbits__links line {
+    animation: none;
+  }
+}
+
+.orbits--web .orbits__circle {
+  stroke: var(--web-circle);
+}
+
+.orbits--web .orbits__circle--lit,
+.orbits--web .orbits__circles text.orbits__circle--lit {
+  stroke: var(--web-accent);
+}
+
+.orbits--web .orbits__photo-ring {
+  stroke: var(--web-accent);
+}

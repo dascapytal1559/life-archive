@@ -1,0 +1,389 @@
+/* The Journal page's side pane and player (SidePane.tsx, player.ts, and the phone's mini player in JournalSection.tsx):
+   the outline, the source cards with their recordings and transcripts, the cleaner's edits, where the files are, and
+   the player docked at the foot of the day on a phone. The page's layout, the day and the phone's reflow are
+   journal.css's. */
+
+/* The side pane. */
+.jn-side {
+  border-left: 1px solid var(--c-line);
+  overflow-y: auto;
+  padding: 16px 16px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  background: var(--c-page);
+  min-height: 0;
+}
+
+.jn-side__h {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.jn-side__h h4 {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.jn-side__h span {
+  font: 10.5px var(--c-mono);
+  color: var(--c-faint);
+}
+
+.jn-outline__row {
+  display: flex;
+  gap: 10px;
+  padding: 5px 8px;
+  border-radius: 7px;
+  font-size: 13px;
+  color: var(--c-muted);
+}
+
+.jn-outline__row:hover {
+  background: var(--c-surface-2);
+  color: var(--c-text);
+}
+
+.jn-outline__row--3 {
+  padding-left: 24px;
+}
+
+.jn-outline__at {
+  font: 11px var(--c-mono);
+  color: var(--c-faint);
+  width: 52px;
+  flex: none;
+  padding-top: 1px;
+}
+
+.jn-src {
+  border: 1px solid var(--c-line);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: var(--c-surface);
+  margin-bottom: 8px;
+}
+
+.jn-src.is-on {
+  border-color: var(--c-accent-line);
+}
+
+.jn-src--outside {
+  border-style: dashed;
+  background: transparent;
+}
+
+.jn-src__head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.jn-src__name {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.jn-src__at,
+.jn-src__time {
+  font: 10.5px var(--c-mono);
+  color: var(--c-faint);
+  white-space: nowrap;
+}
+
+.jn-kind {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: var(--c-accent-soft);
+  color: var(--c-accent);
+  flex: none;
+}
+
+.jn-kind .icon {
+  width: 14px;
+  height: 14px;
+}
+
+.jn-kind--call {
+  background: color-mix(in srgb, var(--c-blue) 14%, transparent);
+  color: var(--c-blue);
+}
+
+.jn-kind--other,
+.jn-src--outside .jn-kind {
+  background: var(--c-surface-2);
+  color: var(--c-faint);
+}
+
+.jn-src__player {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 9px;
+}
+
+.jn .jn-play {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--c-text);
+  color: var(--c-page);
+  flex: none;
+}
+
+.jn-play .icon {
+  width: 12px;
+  height: 12px;
+}
+
+.jn .jn-play--small {
+  width: 24px;
+  height: 24px;
+}
+
+.jn-play--small .icon {
+  width: 10px;
+  height: 10px;
+}
+
+/* Where a recording is: a thin track, the played part in the accent (--jn-seek, set as it plays). */
+.jn-seek {
+  flex: 1;
+  min-width: 0;
+  height: 18px;
+  margin: 0;
+  background: transparent;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+
+.jn-seek--idle {
+  display: block;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--c-line-2);
+  cursor: default;
+}
+
+.jn-seek::-webkit-slider-runnable-track {
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(to right, var(--c-accent) var(--jn-seek, 0%), var(--c-line-2) var(--jn-seek, 0%));
+}
+
+.jn-seek::-moz-range-track {
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(to right, var(--c-accent) var(--jn-seek, 0%), var(--c-line-2) var(--jn-seek, 0%));
+}
+
+.jn-seek::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 11px;
+  height: 11px;
+  margin-top: -4px;
+  border-radius: 50%;
+  background: var(--c-accent);
+  border: 0;
+}
+
+.jn-seek::-moz-range-thumb {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--c-accent);
+  border: 0;
+}
+
+.jn-seek:disabled {
+  cursor: default;
+}
+
+.jn-src__note {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--c-muted);
+}
+
+.jn-src__note--problem {
+  color: var(--c-mild);
+}
+
+.jn-src__foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 11.5px;
+  color: var(--c-faint);
+}
+
+.jn .jn-link {
+  color: var(--c-muted);
+  text-decoration: underline;
+  text-decoration-color: var(--c-line-2);
+  text-underline-offset: 2px;
+}
+
+.jn .jn-link:hover {
+  color: var(--c-text);
+}
+
+.jn-src__to {
+  margin-left: auto;
+  max-width: 160px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.jn-src__text {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--c-line);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--c-muted);
+}
+
+.jn-seg {
+  display: inline-flex;
+  border: 1px solid var(--c-line-2);
+  border-radius: 8px;
+  overflow: hidden;
+  height: 26px;
+  margin-bottom: 8px;
+}
+
+.jn .jn-seg button {
+  padding: 0 10px;
+  font-size: 11px;
+  color: var(--c-muted);
+}
+
+.jn .jn-seg button[aria-pressed="true"] {
+  background: var(--c-surface-2);
+  color: var(--c-text);
+  font-weight: 500;
+}
+
+.jn-verbatim__head {
+  font: 10.5px/1.5 var(--c-mono);
+  color: var(--c-faint);
+  margin-bottom: 8px;
+  overflow-wrap: anywhere;
+}
+
+.jn-verbatim {
+  white-space: pre-wrap;
+  color: var(--c-text);
+}
+
+.jn-edits {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--c-muted);
+}
+
+.jn-edits h2,
+.jn-edits h3 {
+  font-size: 12.5px;
+  font-weight: 600;
+  margin: 10px 0 4px;
+  color: var(--c-text);
+}
+
+.jn-edits p,
+.jn-edits ul,
+.jn-edits ol {
+  margin: 0 0 8px;
+}
+
+.jn-edits ul,
+.jn-edits ol {
+  padding-left: 18px;
+}
+
+.jn-edits code {
+  font: 11.5px var(--c-mono);
+}
+
+.jn-edits__name {
+  font: 10.5px var(--c-mono);
+  color: var(--c-faint);
+  margin: 6px 0 4px;
+}
+
+.jn-files {
+  font: 11px/1.7 var(--c-mono);
+  color: var(--c-faint);
+}
+
+.jn-files div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.jn-files span:first-child {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.jn-files span:last-child {
+  text-align: right;
+}
+
+/* The phone's player, docked at the foot of the day. */
+.jn-mini {
+  position: sticky;
+  bottom: 8px;
+  z-index: 2;
+  align-items: center;
+  gap: 12px;
+  margin: 0 10px 8px;
+  padding: 10px 14px;
+  border: 1px solid var(--c-line-2);
+  border-radius: 14px;
+  background: var(--c-surface-2);
+  box-shadow: 0 8px 24px -10px rgba(0, 0, 0, 0.4);
+}
+
+.jn-mini__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.jn-mini__top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.jn-mini__body b {
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+

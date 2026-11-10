@@ -1,0 +1,154 @@
+/* The river (River.tsx). Colours and type come from the .demos variables. */
+
+.river__year {
+  fill: var(--star);
+  font: italic 400 17px var(--serif);
+  opacity: 0.8;
+}
+
+.river__month,
+.river__now {
+  fill: var(--dim);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.river__now {
+  fill: var(--me);
+  opacity: 0.85;
+}
+
+.river__year-line {
+  stroke: rgba(200, 214, 255, 0.16);
+  stroke-width: 1;
+}
+
+.river__month-line {
+  stroke: rgba(200, 214, 255, 0.07);
+  stroke-width: 1;
+}
+
+.river__glow {
+  opacity: 0.22;
+  transition: opacity 0.3s ease;
+}
+
+.river__water--focused .river__glow {
+  opacity: 0.06;
+}
+
+.river__stream {
+  transition: opacity 0.25s ease;
+}
+
+.river__stream--edged {
+  stroke: rgba(7, 11, 22, 0.5);
+  stroke-width: 0.6;
+}
+
+.river__water--focused .river__stream {
+  opacity: 0.18;
+}
+
+.river__focus {
+  stroke: var(--star);
+  stroke-width: 1;
+  pointer-events: none;
+}
+
+.river__label {
+  fill: var(--star);
+  font-family: var(--serif);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  paint-order: stroke;
+  stroke: rgba(7, 11, 22, 0.55);
+  stroke-width: 2.5px;
+  stroke-linejoin: round;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.river__label--on-light {
+  fill: rgba(7, 11, 22, 0.86);
+  stroke: none;
+}
+
+.river__water--focused .river__label {
+  opacity: 0.15;
+}
+
+.river__water--focused .river__label.is-focus {
+  opacity: 1;
+}
+
+.river__cursor line {
+  stroke: rgba(232, 238, 252, 0.45);
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+}
+
+.river__cursor circle {
+  fill: var(--star);
+  stroke: var(--night);
+  stroke-width: 1.5;
+}
+
+.river__cursor text {
+  fill: var(--star);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+
+.river__hit--on {
+  cursor: pointer;
+}
+
+/* The river flows in from the left once, when the view opens. */
+.river__reveal {
+  transform-box: fill-box;
+  transform-origin: left center;
+  animation: river-reveal 1.8s cubic-bezier(0.25, 0.7, 0.2, 1) both;
+}
+
+@keyframes river-reveal {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .river__reveal {
+    animation: none;
+  }
+  .river__stream,
+  .river__label,
+  .river__glow {
+    transition: none;
+  }
+}
+
+.river-key {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.river-key svg {
+  flex: none;
+}
+
+.river-key__ramp {
+  display: inline-block;
+  width: 34px;
+  height: 9px;
+  border-radius: 5px;
+  background: linear-gradient(90deg, rgba(246, 193, 119, 0.25), rgba(246, 193, 119, 0.95));
+  flex: none;
+}
+
+.river-key__note {
+  color: rgba(141, 151, 173, 0.75);
+  font-size: 11px;
+}

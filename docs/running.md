@@ -1,0 +1,43 @@
+# Running the archive
+
+How to run the archive's server, test it, and try things on made-up data.
+
+## Running
+
+Runs on Node 24.22.1 only (the server runs TypeScript directly), pinned in `package.json`'s `devEngines.runtime`. The Vite+ shims in `~/.vite-plus/bin` read the pin and run that version here, so put them first on the PATH; `npm test`, `npm start`, `npm run archive` and `npm run check-data` stop on any other Node with a message saying so (`server/nodeVersion.ts`).
+
+```sh
+export PATH="$HOME/.vite-plus/bin:$PATH"
+npm install
+npm start          # the archive's server: http://127.0.0.1:4650/life-archive/ and /friend-map/
+```
+
+`npm start` runs the archive's server (`server/main.ts`), the only process that opens the archive. It prunes the backups (see data.md's "Backups"), opens the core's database, the calendar and each module's database and brings their schemas up to date, runs the people rules when friend map's code is new, and then answers on 127.0.0.1 alone (its log says "The archive's server running at <url>/life-archive/, and /friend-map/"), at the port `LIFE_ARCHIVE_URL` names (`http://127.0.0.1:4650` unless set; friend-map reaches it at the same setting). It runs the live connectors (Telegram and WhatsApp, see archive.md's "Telegram, live" and archive.md's "WhatsApp, live", the agents' conversations, see events.md's "Conversations with agents, live", and Polar's workouts, see events.md's "Workouts from Polar"), each only while it is switched on (and the bridge rig answers, for the bridges) and only in one process on an archive at a time (a second server waits, looking every minute, until the first stops, dies or its heartbeat stands still for two minutes; `server/connectors/liveLock.ts`), the AI service (Codex, see queries.md's "The AI service") and each module's work (rituals' watch on its store, and the folder history's watchers, see events.md's "Folder history"), and stops them when it stops: on SIGINT or SIGTERM it closes everything it opened in the reverse of the order it opened it, the live connectors and their lock first and the archive last, so no connector or Codex process, no lock and no `-wal` file is left behind (`server/serverLayer.ts`). When the archive cannot be opened, its routes answer 503 and friend-map's page says the archive is unavailable; a module whose database cannot be opened (a missing archive's folder among the reasons) answers its paths outside `/life-archive/` 503 too, saying why (friend map's `/api/archive/` and `/friend-map/`); a missing archive's folder is never made, so a server started in the wrong place never stands in for the real archive. An `archive.sqlite` still at the folder's root (from before friend map was a module) is refused until `npm run archive -- migrate friend-map-module` has moved it (see data.md's "Backups"). On this Mac launchd keeps it running as `local.life-archive` (log `/tmp/life-archive-server.log`; restart with `launchctl kickstart -k gui/$(id -u)/local.life-archive`).
+
+Its door (`server/archive/server.ts`) answers only the viewer's `/life-archive/`, the paths a module mounts its routes at (friend map's contract at `/api/archive/`, its page's API at `/friend-map/api/` and the chat a Messages row's drawer opens at `/life-archive/api/content/messages/`; the shopping module's page's at `/life-archive/api/shopping`, its address before it was a module) and the pages a module serves (friend-map's page at `/friend-map/`, each by a Vite of its own, `server/modulePages.ts`) (the root sent on to it; the Health tab's results at `/life-archive/api/m/health`, the exercise module's activities and the maps it draws routes on at `/life-archive/api/m/exercise/`, the Events page's Sources at `/life-archive/api/sources`, and the Inspirations page's routes at `/life-archive/api/inspirations` among it) (404 otherwise), and only to a Host it admits (403 otherwise): localhost, 127.0.0.1 and [::1], and the names in `LIFE_ARCHIVE_ALLOWED_HOSTS` and `FRIEND_MAP_ALLOWED_HOSTS` (comma-separated, the environment or `.env.local`). The tailnet name the pages are opened at must be one of them; that keeps DNS-rebinding pages off the archive. A request to the contract that names an archive's folder (`x-archive-folder`, which friend-map-frontend's own server sends) is answered 503 when it is not this server's, so friend-map on a testing folder never meets the real archive. Under `/life-archive/` the console is at `/life-archive/dev`, and the door also serves the main branch's preview at `/life-archive/main` (plain files from the archive's folder's `main-preview/`, nothing of the archive's; demo.md's "The main preview") and sends the console's former addresses (`/life-archive/console/...`) on to the same place under `/life-archive/dev` (console.md's "The console").
+
+```sh
+npm test          # the archive and its migrations, people, links and merges, the connectors, the HTTP routes and the server's
+                  # door, check-data, local dates, the query language, SQL, Generate (with a stand-in model), the privacy
+                  # guard (with a stand-in Codex), and what this project shares with friend-map (see wiring.md's "What came from friend-map")
+npm run typecheck
+```
+
+`npm test` also holds every code file to 1000 lines (`tools/checks/fileSize.ts`; alone, `npm run file-size`). A code file is one git tracks, or a new one it does not ignore, ending in `.ts`, `.tsx`, `.css`, `.swift`, `.sh`, `.command`, `.c`, `.html`, `.js` or `.mjs`, or a script without an extension (starting `#!`); tests count. The files that were longer when the cap came in (7 November 2026) are listed in `oversized-files.json` with the lines each had: a listed file may not grow past that ceiling, the check asks for the ceiling to be lowered when it shrinks, and for the file to leave the list once it fits. A file is split by what its parts do, not by line count.
+
+To try things without real data, build a data folder from the testing data (every module's made-up data: friend map's small made-up Messenger export and six made-up people in `modules/friend-map/fixtures/data/`, the others' as their READMEs say) and run the server on it, on a port of its own, beside the real one; friend-map's page is at `/friend-map/` of it:
+
+```sh
+npm run testing-data -- /tmp/life-archive-testing
+LIFE_ARCHIVE_DATA=/tmp/life-archive-testing LIFE_ARCHIVE_URL=http://127.0.0.1:4651 npm start
+```
+
+The public demo is the same console over the testing data's crowd as plain files with no server: `npm run build:demo`, then `npm run serve:demo` to look at it (docs/demo.md).
+
+### Checking the data
+
+```sh
+npm run check-data
+```
+
+Reads what each module checks of its data (read-only, without the server; a module's `checkData`): friend map's person table in `modules/friend-map/archive.sqlite`, and the inspirations in `modules/inspirations/inspirations.sqlite` (each only while its module is on). It needs `core.sqlite`, and says so of an `archive.sqlite` still at the folder's root (moved by `npm run archive -- migrate friend-map-module`). It prints one line per problem (the person or account, and what is wrong) and a summary, and exits with 0 when everything is fine, 1 when something needs fixing, and 2 when there is nothing to check (no archive), the archive can't be read, a module is broken, or a module with checks has no database in the folder (friend map's `archive.sqlite` missing, on a folder that is not the archive's, say), which it names as not checked. A person's name must not be empty (except for someone the import gave no name, such as a deleted Messenger account, whom you have never named or edited and the rules archive), a name you set must be written the way the app writes it (trimmed and single-spaced; a name still as the platform wrote it may keep its stray spaces, for you to review), their aliases must be names, written the way the app writes them, their note and draft opener must be written the way the app writes them, you must not be someone to reach out to, every account must point at a person, every tag in the tag table must be written the way the app writes tags, `archive` and `keep` must be there and the only built-in tags, and you (the captain's own person) must have no tags. Hangouts, logged calls and the notes on imported calls are checked the same way. An archive from older code is reported until it is brought up to date (`npm run archive -- migrate`). Run it after editing people with an agent. `node server/check-data.ts <folder>` checks the archive in another folder. friend-map's settings file (in `modules/friend-map/page/` of the archive's folder) is checked by friend-map's own `check-data`.

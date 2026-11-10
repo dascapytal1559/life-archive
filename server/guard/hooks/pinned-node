@@ -1,0 +1,12 @@
+#!/bin/sh
+# The life archive's privacy guard (its docs/guard.md's "The privacy guard"): prints the path of the Node the guard's code
+# runs on, for the hooks to run it with. The guard's hooks run in whichever repository they guard, and a version manager's
+# `node` (the Vite+ shim in ~/.vite-plus/bin, nvm, fnm, mise) picks its version from the folder it runs in, so a bare
+# `node` there is that repository's Node, not the life archive's pin (.node-version, package.json's devEngines). Asked from
+# the life archive's own root, the same `node` names the pinned one; the guard then runs that binary in the repository.
+# With no version manager, that is the PATH's node, and the guard's own version check (server/nodeVersion.ts) still stops
+# a wrong one.
+root=$(cd "$(dirname "$0")/../../.." && pwd -P) || exit 1
+command -v node >/dev/null 2>&1 || { echo "guard: node is not on PATH, so git could not check for private data; stopped." >&2; exit 1; }
+bin=$(cd "$root" && node -p process.execPath 2>/dev/null)
+if [ -n "$bin" ] && [ -x "$bin" ]; then printf '%s\n' "$bin"; else command -v node; fi

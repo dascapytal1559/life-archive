@@ -1,0 +1,152 @@
+/* City (City.tsx). Colours come from the .demos variables (demos.css); the city itself is drawn in cityGl.ts, in its one cyan. */
+
+/* The canvas, centred in the stage as Orbits' map is (orbits.css), so the drawing slides with the map's centre while
+   the docked panel moves, never narrower than the map. */
+.demos__stage > .city {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  /* Dragging pans the city (City.tsx), rather than scrolling or zooming the page. */
+  touch-action: none;
+  user-select: none;
+  /* Zoomed in, buildings pass under the header: they fade out under it rather than crowd its controls. */
+  mask-image: linear-gradient(to bottom, transparent calc(var(--header, 76px) - 56px), #000 calc(var(--header, 76px) - 12px));
+}
+
+.city canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+}
+
+/* The legend, closed to a "Legend" button in the bottom-right corner until opened. */
+.city-legend {
+  position: absolute;
+  right: 22px;
+  bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.city-legend .demo-legend {
+  position: static;
+  order: -1;
+  max-width: 360px;
+}
+
+.city-legend__toggle {
+  padding: 5px 12px;
+  border-radius: 8px;
+  background: rgba(10, 16, 32, 0.66);
+  border: 1px solid var(--faint);
+  backdrop-filter: blur(6px);
+  color: var(--dim);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.city-legend__toggle:hover {
+  color: inherit;
+}
+
+.city-key {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 30px;
+  flex: none;
+}
+
+/* Where WebGL 2 is missing, a line saying so in the middle of the stage. */
+.city__unavailable {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  margin: 0;
+  text-align: center;
+  color: var(--dim);
+}
+
+/* An avenue: a ring road's glowing line. */
+.city-key--avenue::before {
+  content: "";
+  width: 24px;
+  height: 10px;
+  border: 1.5px solid rgba(77, 227, 255, 0.7);
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgba(77, 227, 255, 0.4);
+}
+
+/* A beam over a roof: a short upright line of light. */
+.city-key--beam::before {
+  content: "";
+  width: 2px;
+  height: 16px;
+  border-radius: 1px;
+  background: linear-gradient(to top, #e6faff, transparent);
+  box-shadow: 0 0 6px rgba(77, 227, 255, 0.8);
+}
+
+/* Light on a road: a short bright trail. */
+.city-key--light::before {
+  content: "";
+  width: 22px;
+  height: 2px;
+  border-radius: 1px;
+  background: linear-gradient(to right, transparent, #e6faff);
+  box-shadow: 0 0 4px rgba(77, 227, 255, 0.7);
+}
+
+/* An arc to a group-chat friend. */
+.city-key--line::before {
+  content: "";
+  width: 22px;
+  height: 9px;
+  border: 1.5px solid rgba(200, 245, 255, 0.6);
+  border-bottom: none;
+  border-radius: 11px 11px 0 0;
+}
+
+/* Turning and tilting: a curved arrow round a dot. */
+.city-key--turn::before {
+  content: "";
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid rgba(232, 238, 252, 0.45);
+  border-right-color: transparent;
+  border-radius: 50%;
+}
+
+/* The taper's curve in the legend: Methodology's chart, a little smaller. */
+.city-legend__curve {
+  display: block;
+}
+
+.city-legend__curve .method__curve {
+  max-width: 330px;
+  margin: 2px auto 4px;
+}
+
+/* A touch screen: a button big enough for a finger. */
+@media (pointer: coarse) {
+  .city-legend__toggle {
+    min-height: 36px;
+  }
+}
+
+/* A phone: the legend fits the screen. */
+@media (max-width: 560px) {
+  .city-legend {
+    right: 16px;
+  }
+
+  .city-legend .demo-legend {
+    max-width: calc(100cqw - 32px);
+  }
+}

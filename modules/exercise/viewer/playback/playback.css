@@ -1,0 +1,328 @@
+/* An activity's playback (Playback.tsx): the scene full screen, the title and the moment's readouts over its top,
+   the controls over its foot, each on a dark glass so they read over the light and the dark map and the city. */
+
+.pb {
+  --pb-trail: #ff7a2f;
+  --pb-glow: rgba(255, 122, 47, 0.55);
+  --pb-glass: rgba(14, 16, 20, 0.72);
+  --pb-line: rgba(255, 255, 255, 0.14);
+  --pb-text: #f5f5f4;
+  --pb-faint: #a8a29e;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: #0b0d10;
+  color: var(--pb-text);
+}
+
+.pb__wait {
+  display: grid;
+  place-content: center;
+  gap: 16px;
+  height: 100%;
+  padding: 16px;
+  text-align: center;
+}
+
+.pb__player,
+.pb__stage,
+.pb .pb__scene {
+  position: absolute;
+  inset: 0;
+}
+
+.pb .pb__scene {
+  visibility: hidden;
+}
+
+.pb .pb__scene--shown {
+  visibility: visible;
+}
+
+.pb__loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  margin: 0;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--pb-glass);
+  font-size: 14px;
+}
+
+/* The marker: a dot in the trail's colour, ringed in white, a slow pulse about it. */
+.pb-marker {
+  position: relative;
+  width: 18px;
+  height: 18px;
+}
+
+.pb-marker__dot {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--pb-trail);
+  box-shadow: 0 0 0 3px #fff, 0 2px 10px rgba(0, 0, 0, 0.45);
+}
+
+.pb-marker__pulse {
+  position: absolute;
+  inset: -12px;
+  border-radius: 50%;
+  background: var(--pb-glow);
+  animation: pb-pulse 2.2s ease-out infinite;
+}
+
+@keyframes pb-pulse {
+  from { transform: scale(0.4); opacity: 0.9; }
+  to { transform: scale(1.4); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pb-marker__pulse { animation: none; opacity: 0.4; }
+}
+
+.pb__top,
+.pb__stats,
+.pb__controls,
+.pb__note {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--pb-line);
+  border-radius: 14px;
+  background: var(--pb-glass);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.pb__top {
+  top: 16px;
+  padding: 8px 12px 8px 8px;
+}
+
+.pb .pb__close {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.pb .pb__close:hover,
+.pb .pb__close:focus-visible {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.pb__title {
+  min-width: 0;
+  flex: 1;
+}
+
+.pb__title h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.pb__title span {
+  color: var(--pb-faint);
+  font-size: 12px;
+}
+
+.pb__kinds,
+.pb__speeds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.pb .pb__chip,
+.pb .pb__button {
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--pb-line);
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.pb .pb__chip[aria-pressed="true"] {
+  border-color: var(--pb-trail);
+  background: var(--pb-trail);
+  color: #111;
+  font-weight: 600;
+}
+
+.pb .pb__chip:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.pb__stats {
+  top: 76px;
+  margin: 0;
+  padding: 10px 16px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.pb__stat {
+  min-width: 84px;
+}
+
+.pb__stat dt {
+  color: var(--pb-faint);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.pb__stat dd {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 2px 0 0;
+  font-family: var(--c-mono, ui-monospace, monospace);
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+}
+
+.pb__zone {
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: var(--zone, #888);
+  color: #111;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.pb__note {
+  top: 150px;
+  margin: 0;
+  padding: 8px 14px;
+  font-size: 13px;
+}
+
+/* The controls, above the scene's credits (OpenStreetMap's and the terrain's, or Google's and Cesium's). */
+.pb__controls {
+  bottom: 40px;
+  padding: 8px 12px 8px 8px;
+}
+
+.pb .pb__play {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  border: 0;
+  border-radius: 50%;
+  background: var(--pb-trail);
+  color: #111;
+  cursor: pointer;
+}
+
+.pb .pb__play svg {
+  width: 22px;
+  height: 22px;
+}
+
+.pb__scrub {
+  min-width: 0;
+  flex: 1;
+  accent-color: var(--pb-trail);
+}
+
+/* The scenes' own credits stay readable, and clear of the controls. */
+.pb .maplibregl-ctrl-attrib,
+.pb .cesium-viewer-bottom {
+  font-size: 11px;
+}
+
+.pb .cesium-viewer-bottom {
+  bottom: 4px;
+}
+
+@media (max-width: 640px) {
+  .pb__top {
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    flex-wrap: wrap;
+  }
+
+  .pb__kinds {
+    width: 100%;
+  }
+
+  .pb__stats {
+    top: auto;
+    bottom: 152px;
+    left: 8px;
+    right: 8px;
+    gap: 8px 12px;
+    padding: 8px 12px;
+  }
+
+  .pb__stat {
+    min-width: 72px;
+  }
+
+  .pb__stat dd {
+    font-size: 16px;
+  }
+
+  .pb__note {
+    top: 104px;
+    left: 8px;
+    right: 8px;
+  }
+
+  .pb__controls {
+    bottom: 36px;
+    left: 8px;
+    right: 8px;
+    flex-wrap: wrap;
+  }
+
+  .pb__speeds {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+/* The activity page's way in, over its route's map. */
+.ex-play {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 10px;
+  min-height: 34px;
+  padding: 0 14px 0 10px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--c-accent);
+  color: var(--c-surface, #fff);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ex-play svg {
+  width: 18px;
+  height: 18px;
+}

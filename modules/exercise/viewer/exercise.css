@@ -1,0 +1,1047 @@
+/* The console's Exercise (ExerciseSection.tsx, Drawings.tsx): a feed of activity cards beside the
+   weekly summary, and an activity's page, in the console's tokens (console.css) for both looks. Routes are drawn on the
+   map of their area kept on this Mac (RouteMap.tsx), else on a plain dotted ground. */
+
+.ex {
+  display: grid;
+  gap: 20px;
+}
+
+.ex__message {
+  margin: 0;
+  color: var(--c-muted);
+  font-size: 13px;
+}
+
+/* Under the weekly cards, eight columns of twelve for the feed and four for the summaries: the week's figures two by
+   two above By sport, one column reading down, its top level with the latest activity's. The summaries come first in
+   the markup, as a phone shows them (one column, above the feed), so a wide screen places each in its column. */
+.ex__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.ex__feed {
+  display: grid;
+  gap: 16px;
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.ex__side {
+  display: grid;
+  gap: 16px;
+  grid-column: 2;
+  grid-row: 1;
+  position: sticky;
+  top: 0;
+}
+
+.ex__side .kpis {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* By sport: a gym type whose load leaves out sets without a usable weight is underlined dotted; hovering it says how many. */
+.ex-by-sport {
+  cursor: default;
+}
+
+.ex-by-sport--partial {
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+  cursor: help;
+}
+
+/* A card an activity: the whole card opens its page. */
+.ex-card {
+  position: relative;
+  display: grid;
+  gap: 14px;
+  padding: 18px 20px;
+  border: 1px solid var(--c-line);
+  border-radius: 14px;
+  background: var(--c-surface);
+  box-shadow: var(--c-shadow);
+  transition: border-color 120ms ease;
+}
+
+.ex-card:hover {
+  border-color: var(--c-line-2);
+}
+
+.ex-card__link {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+}
+
+.ex-card__head,
+.ex-page__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ex-sport {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--c-accent-soft);
+  color: var(--c-accent);
+}
+
+.ex-sport .icon {
+  width: 20px;
+  height: 20px;
+}
+
+.ex-sport--ride {
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--c-blue);
+}
+
+.ex-sport--walk,
+.ex-sport--other {
+  background: var(--c-surface-2);
+  color: var(--c-text);
+}
+
+.ex-sport--large {
+  width: 52px;
+  height: 52px;
+}
+
+.ex-sport--large .icon {
+  width: 26px;
+  height: 26px;
+}
+
+.ex-card__when {
+  color: var(--c-muted);
+  font-size: 12px;
+}
+
+.ex-card__title {
+  margin: 2px 0 0;
+  font-size: 18px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.ex-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 0;
+  margin: 0;
+}
+
+.ex-stats > div {
+  padding: 0 18px;
+  border-left: 1px solid var(--c-line);
+}
+
+.ex-stats > div:first-child {
+  padding-left: 0;
+  border-left: 0;
+}
+
+.ex-stats dt {
+  color: var(--c-muted);
+  font-size: 12px;
+}
+
+.ex-stats dd {
+  margin: 2px 0 0;
+  font-size: 19px;
+  white-space: nowrap;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+/* The route on a dotted ground while its map paints, or where its area's map is not downloaded (RouteMap.tsx). */
+.ex-card__route,
+.ex-page__map {
+  border-radius: 10px;
+  overflow: hidden;
+  background-color: var(--c-surface-2);
+  background-image: radial-gradient(var(--c-line-2) 1px, transparent 1.2px);
+  background-size: 14px 14px;
+}
+
+.ex-card__route {
+  height: 200px;
+}
+
+.ex-page__map {
+  aspect-ratio: 4 / 3;
+}
+
+/* The thumbnail: the map's picture, the route's SVG over it, and the credit or the note in a corner. */
+.route-box {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.route-box__map {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: route-map-in 180ms ease-out;
+}
+
+@keyframes route-map-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.route-box .route {
+  position: relative;
+}
+
+.route-box__credit,
+.route-box__note {
+  position: absolute;
+  right: 6px;
+  bottom: 5px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--c-surface) 75%, transparent);
+  color: var(--c-muted);
+  font-size: 10px;
+  line-height: 1.5;
+  pointer-events: none;
+}
+
+.route-box__note {
+  left: 6px;
+  right: auto;
+  font-size: 11px;
+}
+
+/* An activity's page: a live map of the route's area; its controls in the console's colours over MapLibre's own (which load after this). */
+.ex-page__map--live {
+  background-image: none;
+}
+
+.route-live {
+  width: 100%;
+  height: 100%;
+}
+
+.route-live .maplibregl-ctrl.maplibregl-ctrl-attrib {
+  background: color-mix(in srgb, var(--c-surface) 75%, transparent);
+  color: var(--c-muted);
+  font-size: 10px;
+}
+
+.route-live .maplibregl-ctrl.maplibregl-ctrl-attrib a {
+  color: inherit;
+}
+
+.route-live .maplibregl-ctrl.maplibregl-ctrl-scale {
+  border-color: var(--c-muted);
+  background: color-mix(in srgb, var(--c-surface) 70%, transparent);
+  color: var(--c-muted);
+  font-family: var(--c-mono);
+  font-size: 10px;
+}
+
+.route-live .maplibregl-ctrl.maplibregl-ctrl-group {
+  border: 1px solid var(--c-line-2);
+  background: var(--c-surface);
+  box-shadow: none;
+}
+
+.route-live .maplibregl-ctrl-group button + button {
+  border-top-color: var(--c-line-2);
+}
+
+.route-live .maplibregl-ctrl-icon {
+  filter: var(--map-ctrl-icon, none);
+}
+
+.console--dark .route-live {
+  --map-ctrl-icon: invert(1);
+}
+
+.route {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.route polyline {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.route__halo {
+  stroke: var(--c-surface);
+  stroke-width: 6;
+}
+
+.route__line {
+  stroke: var(--c-accent);
+  stroke-width: 3;
+}
+
+.route--large .route__halo {
+  stroke-width: 7;
+}
+
+.route--large .route__line {
+  stroke-width: 3.5;
+}
+
+.route__start {
+  fill: var(--c-accent);
+  stroke: var(--c-surface);
+}
+
+.route__end {
+  fill: var(--c-surface);
+  stroke: var(--c-text);
+}
+
+.route__scale line {
+  stroke: var(--c-muted);
+  stroke-width: 1.5;
+}
+
+.route__scale text {
+  fill: var(--c-muted);
+  font-family: var(--c-mono);
+  dominant-baseline: middle;
+}
+
+.ex-card__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  color: var(--c-muted);
+  font-size: 12px;
+}
+
+.ex-chip {
+  padding: 1px 8px;
+  border: 1px solid var(--c-line);
+  border-radius: 10px;
+  background: var(--c-surface-2);
+  color: var(--c-text);
+  white-space: nowrap;
+}
+
+.ex-card__note {
+  font-style: italic;
+}
+
+/* An activity's page. */
+.ex__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  justify-self: start;
+  color: var(--c-muted);
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.ex__back:hover {
+  color: var(--c-text);
+}
+
+.ex__back .icon {
+  width: 14px;
+  height: 14px;
+}
+
+.ex-page {
+  display: grid;
+  gap: 20px;
+}
+
+.ex-page__title {
+  margin: 2px 0 0;
+  font-size: 26px;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+}
+
+.ex-page__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: 16px;
+  align-items: start;
+}
+
+/* Heart rate over time. */
+.hr-chart {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  gap: 8px;
+}
+
+.hr-chart__axis {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 220px;
+  margin: -6px 0;
+  font-family: var(--c-mono);
+  font-size: 10px;
+  color: var(--c-faint);
+  text-align: right;
+}
+
+.hr-chart__plot {
+  position: relative;
+  touch-action: pan-y;
+}
+
+.hr-chart__plot svg {
+  display: block;
+  width: 100%;
+  height: 220px;
+  overflow: visible;
+}
+
+.hr-chart__grid {
+  stroke: var(--c-line);
+}
+
+.hr-chart__line {
+  fill: none;
+  stroke: var(--c-out);
+  stroke-width: 1.75;
+  stroke-linejoin: round;
+}
+
+.hr-chart__fill-top {
+  stop-color: var(--c-out);
+  stop-opacity: 0.2;
+}
+
+.hr-chart__fill-bottom {
+  stop-color: var(--c-out);
+  stop-opacity: 0;
+}
+
+.hr-chart__average {
+  stroke: var(--c-muted);
+  stroke-dasharray: 4 4;
+}
+
+.hr-chart__cursor {
+  stroke: var(--c-text);
+  stroke-opacity: 0.35;
+}
+
+.hr-chart__readout {
+  position: absolute;
+  top: -4px;
+  transform: translateX(-50%);
+  padding: 2px 8px;
+  border: 1px solid var(--c-line-2);
+  border-radius: 6px;
+  background: var(--c-surface);
+  font-size: 12px;
+  color: var(--c-muted);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.hr-chart__readout b {
+  color: var(--c-text);
+  font-weight: 600;
+}
+
+.hr-chart__times {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-family: var(--c-mono);
+  font-size: 10px;
+  color: var(--c-faint);
+}
+
+/* The zones' colours, everywhere a zone is drawn: zone 2 blue. */
+.zone--1 { --zone: var(--c-faint); }
+.zone--2 { --zone: var(--c-blue); }
+.zone--3 { --zone: var(--c-in); }
+.zone--4 { --zone: var(--c-mild); }
+.zone--5 { --zone: var(--c-out); }
+
+/* Time in zones as one line, on a feed card. */
+.zone-line {
+  display: flex;
+  gap: 2px;
+  height: 6px;
+}
+
+.zone-line i {
+  min-width: 2px;
+  border-radius: 2px;
+  background: var(--zone);
+}
+
+/* Time in each zone, the hardest at the top. */
+.zones {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.zones__row {
+  display: grid;
+  grid-template-columns: 112px 84px minmax(0, 1fr) 36px 44px;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+
+
+.zones__name b {
+  color: var(--zone);
+  font-weight: 650;
+}
+
+.zones__bpm,
+.zones__share,
+.zones__time {
+  font-family: var(--c-mono);
+  font-size: 12px;
+  color: var(--c-muted);
+}
+
+.zones__share,
+.zones__time {
+  text-align: right;
+}
+
+.zones__track {
+  height: 10px;
+  border-radius: 3px;
+  background: var(--c-surface-2);
+  overflow: hidden;
+}
+
+.zones__track i {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--zone);
+}
+
+/* Splits: a kilometre a row, a bar as long as how fast. */
+.splits {
+  display: grid;
+  font-size: 13px;
+}
+
+.splits__row {
+  display: grid;
+  grid-template-columns: 40px 56px minmax(0, 1fr) 36px;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 0;
+  border-top: 1px solid var(--c-line);
+}
+
+.splits__row > span:nth-child(2),
+.splits__row > span:nth-child(4) {
+  font-family: var(--c-mono);
+  font-size: 12px;
+}
+
+.splits__row > span:nth-child(4) {
+  text-align: right;
+  color: var(--c-out);
+}
+
+.splits__row--head {
+  border-top: 0;
+  padding-top: 0;
+  font-family: var(--c-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--c-faint);
+}
+
+.splits__row--head > span:nth-child(4) {
+  color: var(--c-faint);
+}
+
+.splits__track i {
+  display: block;
+  height: 14px;
+  border-radius: 2px;
+  background: var(--c-blue);
+  opacity: 0.55;
+}
+
+/* The weekly summaries side by side, each half the width: zone 2 and gym sessions; stacked on a phone. Each card's
+   two halves stack within it. */
+.ex-weekly {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+}
+
+.ex-weekly .z2 {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+}
+
+/* The gym card says only its count, so its chart sits at the card's foot, its axis level with zone 2's. */
+.ex-weekly .z2--gym {
+  align-content: space-between;
+}
+
+/* A gym session count, in the accent's green. */
+.z2--gym .z2__value {
+  color: var(--c-accent);
+}
+
+/* The gym card's weeks: a column a week, a session a chip naming it ("Push", "Pull", "Legs") stacked from the bottom,
+   oldest lowest. The chart holds three sessions (--gym-rows, gymRows in format.ts), a chip a third of zone 2's 110px
+   chart less the gaps, so its axis is level with zone 2's; it grows a chip taller for each session past three in its
+   fullest week. Past weeks are dimmer than this one. */
+.wk__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px 12px;
+}
+
+.gym__chart {
+  height: calc(var(--gym-rows, 3) * 37px - 1px);
+}
+
+.gym__week {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 4px;
+  padding: 0 0 3px;
+  opacity: 0.55;
+}
+
+.wk__col--now .gym__week {
+  opacity: 1;
+}
+
+.gym__chart .gym__unit {
+  display: block;
+  width: 100%;
+  max-width: 40px;
+  height: 33px;
+  flex: none;
+  box-sizing: border-box;
+  padding: 0;
+  line-height: 33px;
+  border-radius: 4px;
+  background: var(--c-accent-soft);
+  box-shadow: inset 0 0 0 1px var(--c-accent-line);
+  color: var(--c-accent);
+  font-family: var(--c-sans);
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The weekly zone 2 target (exercise/Zone2.tsx): this week's minutes filling a bar to the target, zone 2's blue, beside
+   the recent weeks' bars under a line at the target. */
+.z2 {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 24px;
+  padding: 18px 20px;
+  border: 1px solid var(--c-line);
+  border-radius: 14px;
+  background: var(--c-surface);
+}
+
+.z2__now {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+.z2__label {
+  font-size: 12px;
+  color: var(--c-muted);
+  font-weight: 500;
+}
+
+.z2__value {
+  font-family: var(--c-mono);
+  font-size: 40px;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: var(--c-blue);
+}
+
+.z2__value small {
+  font-size: 14px;
+  color: var(--c-muted);
+  font-family: var(--c-sans);
+  letter-spacing: 0;
+}
+
+/* This week's minutes against the target, as T3 Code's usage page draws a quota: a wide bar, the minutes done
+   filled, the rest hatched, and a tick, set off by the card's colour either side, at how far through the week we are:
+   the text's near-black by day, white at night, so it stands out against the card in either look. */
+.z2__bar {
+  position: relative;
+  height: 26px;
+  border-radius: 7px;
+  background: repeating-linear-gradient(-45deg, color-mix(in srgb, var(--c-blue) 22%, transparent) 0 1px, transparent 1px 7px);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c-blue) 14%, transparent);
+}
+
+.z2__done {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--c-blue) 55%, var(--c-surface));
+}
+
+.z2__bar--met .z2__done {
+  background: color-mix(in srgb, var(--c-blue) 80%, var(--c-surface));
+}
+
+.z2__elapsed {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  width: 3px;
+  margin-left: -1.5px;
+  border-radius: 2px;
+  background: var(--c-text);
+  box-shadow: 0 0 0 2px var(--c-surface);
+}
+
+.console--dark .z2__elapsed {
+  background: #fff;
+}
+
+.z2__note {
+  font-size: 13px;
+  color: var(--c-muted);
+}
+
+.z2__weeks {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+/* Both weekly charts' frame (exercise/WeekChart.tsx): a column a week, the one pointed at shaded, its words in the
+   heading; under them each month's first Monday's week labelled by its month. */
+.wk__chart {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  gap: 5px;
+  border-bottom: 1px solid var(--c-line);
+}
+
+.wk__col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  border-radius: 4px 4px 0 0;
+  cursor: default;
+}
+
+.wk__col--on {
+  background: var(--c-surface-2);
+  box-shadow: 0 0 0 3px var(--c-surface-2);
+}
+
+.wk__readout {
+  color: var(--c-text);
+}
+
+.wk__axis {
+  display: flex;
+  gap: 5px;
+  font-family: var(--c-mono);
+  font-size: 10px;
+  color: var(--c-faint);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.wk__axis span {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: visible;
+}
+
+.z2__chart {
+  height: 110px;
+}
+
+.z2__chart i {
+  display: block;
+  width: 100%;
+  border-radius: 3px 3px 0 0;
+  background: var(--c-blue);
+  opacity: 0.28;
+}
+
+.z2__chart i.z2__week--met {
+  opacity: 0.6;
+}
+
+.z2__chart i.z2__week--now {
+  opacity: 1;
+}
+
+.z2__goal {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 1px dashed var(--c-muted);
+  pointer-events: none;
+}
+
+/* A workout as logged in Rituals: an exercise a line, its sets as chips; words as written. */
+.ex-log {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+}
+
+.ex-log li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+}
+
+.ex-log__name {
+  font-weight: 600;
+  color: var(--c-text);
+}
+
+.ex-log__set {
+  padding: 1px 7px;
+  border-radius: 8px;
+  background: var(--c-surface-2);
+  border: 1px solid var(--c-line);
+  font-family: var(--c-mono);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.ex-log__text {
+  color: var(--c-text);
+}
+
+.ex-log--compact {
+  gap: 4px;
+  font-size: 12px;
+}
+
+.ex-log__more {
+  color: var(--c-muted);
+}
+
+.ex-chip--z2 {
+  border-color: color-mix(in srgb, var(--c-blue) 40%, transparent);
+  color: var(--c-blue);
+}
+
+/* One column: the summaries first, then the feed, in the markup's order. */
+@media (max-width: 1100px) {
+  .ex__layout,
+  .ex-page__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ex__layout {
+    gap: 16px;
+  }
+
+  .ex__feed,
+  .ex__side {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .ex__side {
+    position: static;
+  }
+}
+
+@media (max-width: 560px) {
+  .ex-weekly {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .z2 {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+    padding: 16px;
+  }
+
+  .ex-card {
+    padding: 16px;
+  }
+
+  .ex-stats > div {
+    padding: 0 14px;
+  }
+
+  .ex-stats dd {
+    font-size: 16px;
+  }
+
+  .ex-card__route {
+    height: 160px;
+  }
+
+  .zones__row {
+    grid-template-columns: 96px minmax(0, 1fr) 36px 40px;
+  }
+
+  .zones__bpm {
+    display: none;
+  }
+}
+
+/* An activity's Delete, at the foot of its page, and its confirmation: a modal, the page dimmed and inert behind it. */
+.ex-delete {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.ex-delete__button,
+.ex-delete__cancel,
+.ex-delete__confirm {
+  padding: 7px 14px;
+  border: 1px solid var(--c-line-2);
+  border-radius: 8px;
+  background: var(--c-surface);
+  color: var(--c-text);
+  font: 500 13px/1.3 var(--c-sans);
+  cursor: pointer;
+}
+
+.ex-delete__button {
+  border-color: var(--c-out-soft);
+  color: var(--c-out);
+}
+
+.ex-delete__button:hover {
+  background: var(--c-out-soft);
+}
+
+.ex-delete__confirm {
+  border-color: var(--c-out);
+  background: var(--c-out);
+  color: #fff;
+}
+
+.ex-delete__cancel:disabled,
+.ex-delete__confirm:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.ex-delete__cannot,
+.ex-delete__note {
+  margin: 0;
+  color: var(--c-muted);
+  font-size: 13px;
+}
+
+.ex-delete__cannot {
+  text-align: right;
+}
+
+.ex-delete__dialog {
+  box-sizing: border-box;
+  width: min(480px, calc(100vw - 24px));
+  padding: 0;
+  border: 1px solid var(--c-line-2);
+  border-radius: 14px;
+  background: var(--c-surface);
+  color: var(--c-text);
+  font: 400 14px/1.5 var(--c-sans);
+}
+
+.ex-delete__dialog::backdrop {
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.ex-delete__body {
+  display: grid;
+  gap: 10px;
+  padding: 20px 22px 18px;
+}
+
+.ex-delete__body h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 650;
+}
+
+.ex-delete__body p {
+  margin: 0;
+}
+
+.ex-delete__name {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--c-surface-2);
+  font-weight: 550;
+}
+
+.ex-delete__failed {
+  color: var(--c-out);
+}
+
+.ex-delete__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.ex-delete__done {
+  margin: 0 0 14px;
+  padding: 8px 12px;
+  border: 1px solid var(--c-line);
+  border-radius: 8px;
+  background: var(--c-surface-2);
+  font-size: 13px;
+}

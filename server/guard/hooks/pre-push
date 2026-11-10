@@ -1,0 +1,7 @@
+#!/bin/sh
+# The life archive's privacy guard (its docs/guard.md's "The privacy guard"): stops what would publish private data, once the
+# repository's own hook has passed the push; each is given the refs git gave.
+node=$("$(dirname "$0")/pinned-node") || exit 1
+refs=$(cat)
+printf '%s\n' "$refs" | "$(dirname "$0")/chain" pre-push "$@" || exit $?
+printf '%s\n' "$refs" | "$node" --no-warnings "$(dirname "$0")/../cli.ts" push "$1"

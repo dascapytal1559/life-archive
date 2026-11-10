@@ -1,0 +1,99 @@
+/* Add and Delete, for a table of the captain's own rows (AddRow.tsx, RowDrawer.tsx, Rows.tsx): the Add button in the
+   table's head, the drawer that asks a new row's fields, and a row's Delete at the foot of its drawer. Over viewer.css's
+   tokens, which the console maps to its own looks. */
+
+/* The head's Add: a quiet button beside the count, the accent on hovering. */
+.rows__add {
+  flex: none;
+  height: 28px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: none;
+  color: var(--star);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.rows__add:hover,
+.rows__add[aria-expanded="true"] {
+  border-color: var(--me);
+  color: var(--me);
+}
+
+/* The new row's drawer: its fields as a row's are listed, each control the field editor's. */
+.add__form .drawer__field dd {
+  min-width: 0;
+}
+
+.add__form .edit__box--people {
+  width: 100%;
+}
+
+.add__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 0 0;
+}
+
+.add__go {
+  height: 30px;
+  padding: 0 14px;
+  border: 1px solid var(--me);
+  border-radius: 6px;
+  background: var(--me);
+  color: var(--night);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.add__go:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.add__actions .add__cancel {
+  margin-left: 0;
+  height: 30px;
+}
+
+.add__hint {
+  padding-top: 10px;
+}
+
+/* A row's Delete, at the foot of its drawer: asked once more before it goes; a row that is never deleted says why. */
+.drawer__delete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 18px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+}
+
+.drawer__delete-button {
+  height: 26px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: none;
+  color: var(--dim);
+  font: inherit;
+  cursor: pointer;
+}
+
+.drawer__delete-button:hover,
+.drawer__delete-button--sure {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.drawer__delete-why {
+  color: var(--dim);
+}

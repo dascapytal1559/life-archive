@@ -1,0 +1,30 @@
+/* The compass in the bottom-left corner of a view with a camera (Compass.tsx): a needle on a leaning disc; pressing
+   it puts the camera back. Colours come from the .demos variables (demos.css). */
+.compass {
+  position: absolute;
+  left: 18px;
+  bottom: 14px;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--dim);
+  cursor: pointer;
+}
+
+.compass:hover {
+  color: inherit;
+}
+
+.compass--home {
+  opacity: 0.6;
+}
+
+.compass--home:hover {
+  opacity: 1;
+}

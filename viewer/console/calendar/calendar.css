@@ -1,0 +1,1155 @@
+/* The Calendar view (CalendarView.tsx), in the console's tokens (console.css's --c-*): the reference's soft week
+   calendar as the console draws it. The bar, the kinds' toggles under it, then the view across the whole width, one
+   surface on a hairline (the day's is day.css's, the week's list week.css's, the year's year.css's); the week is one
+   scroller, the days' heads and summary rows sticky at its top and their labels' gutter sticky at its left. */
+
+.cal {
+  --cal-gutter: 72px;
+  --cal-head: 58px;
+  --cal-messaged: 36px;
+  --cal-agents: 30px;
+  --cal-rituals: 30px;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* With the Messaged row hidden, the All day row sits right under the days' heads. */
+.cal.cal--no-messaged {
+  --cal-messaged: 0px;
+}
+
+/* With the Agents row hidden (agents off, or a person picked), likewise. */
+.cal.cal--no-agents {
+  --cal-agents: 0px;
+}
+
+/* The view's own reset for its buttons (the console's covers the shell alone), at no weight, so every rule below wins. */
+:where(.cal button) {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.cal .icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* The bar: the month, the span and the count; Today, previous and next. */
+.cal__bar {
+  flex: none;
+  /* The views, Today and the arrows first, left-aligned under the page's tabs, then the title beneath them. */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 28px 12px;
+}
+
+.cal__title h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.cal__span {
+  display: block;
+  font-size: 12px;
+  color: var(--c-muted);
+  margin-top: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+.cal__nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+}
+
+.cal__nav button {
+  height: 32px;
+  min-width: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--c-line-2);
+  border-radius: 9px;
+  background: var(--c-surface);
+  color: var(--c-text);
+  font-size: 13px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--c-shadow);
+}
+
+.cal__nav button:hover {
+  background: var(--c-surface-2);
+}
+
+.cal__nav button:disabled {
+  color: var(--c-faint);
+  cursor: default;
+  background: var(--c-surface);
+}
+
+.cal__nav .cal__today {
+  padding: 0 12px;
+}
+
+.cal__nav .icon {
+  width: 15px;
+  height: 15px;
+}
+
+.cal__error {
+  margin: 0 28px 10px;
+}
+
+/* The kinds' toggles, a pill each in its kind's colour when on, and the person picked. */
+.cal__filters {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 28px 12px;
+  min-width: 0;
+}
+
+.cal__kinds {
+  display: flex;
+  gap: 6px;
+  min-width: 0;
+}
+
+.cal-kind {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 11px 0 9px;
+  border: 1px solid var(--c-line);
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--c-faint);
+  white-space: nowrap;
+  transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+
+.cal .cal-kind .icon {
+  width: 14px;
+  height: 14px;
+  color: var(--c-faint);
+}
+
+.cal-kind:hover {
+  border-color: var(--c-line-2);
+  color: var(--c-muted);
+}
+
+.cal-kind.is-on {
+  background: var(--c-surface);
+  border-color: var(--c-line-2);
+  color: var(--c-text);
+  box-shadow: var(--c-shadow);
+}
+
+.cal-kind.is-on.cal-card--messages .icon { color: var(--c-blue); }
+.cal-kind.is-on.cal-card--calls .icon { color: var(--c-in); }
+.cal-kind.is-on.cal-card--hangouts .icon { color: var(--c-mild); }
+.cal-kind.is-on.cal-card--llm .icon { color: var(--c-treated); }
+.cal-kind.is-on.cal-card--workouts .icon { color: var(--c-text); }
+/* Rituals, a trial: quiet, as the day's small moments they are. */
+.cal-card--habits .icon { color: var(--c-muted); }
+.cal-kind.is-on.cal-card--habits .icon { color: var(--c-muted); }
+
+/* The Calls toggle, split: its name toggles, its caret opens the menu of which calls (Unknown calls). */
+.cal-kind--split {
+  position: relative;
+  gap: 0;
+  padding: 0;
+}
+
+.cal-kind--split > button {
+  display: inline-flex;
+  align-items: center;
+  height: 100%;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.cal-kind__main {
+  gap: 6px;
+  padding: 0 6px 0 9px;
+  border-radius: 999px 0 0 999px;
+}
+
+.cal-kind__caret {
+  padding: 0 8px 0 5px;
+  border-left: 1px solid var(--c-line) !important;
+  border-radius: 0 999px 999px 0;
+}
+
+.cal .cal-kind--split .cal-kind__caret .icon {
+  color: var(--c-muted);
+  width: 12px;
+  height: 12px;
+}
+
+.cal-kind__caret:hover,
+.cal-kind__caret[aria-expanded="true"] {
+  background: var(--c-line) !important;
+}
+
+.cal-kind__menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 20;
+  min-width: 160px;
+  padding: 4px;
+  border: 1px solid var(--c-line-2);
+  border-radius: 10px;
+  background: var(--c-surface);
+  box-shadow: var(--c-shadow);
+}
+
+.cal-kind__menu button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--c-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.cal-kind__menu button:hover {
+  background: var(--c-line);
+}
+
+.cal-kind__check {
+  display: inline-flex;
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--c-line-2);
+  border-radius: 4px;
+}
+
+.cal .cal-kind--split .cal-kind__check .icon {
+  width: 12px;
+  height: 12px;
+  color: var(--c-text);
+}
+
+.cal__filters .cal-chip {
+  margin: 0 0 0 auto;
+  height: 28px;
+  padding: 0 9px 0 4px;
+}
+
+.cal__filters .cal-chip .cal-face {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  line-height: 17px;
+  border-color: var(--c-accent-soft);
+}
+
+/* The body: the view, the whole width. */
+.cal__body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  padding: 0 28px 20px;
+  position: relative;
+}
+
+.cal-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 3px 8px 3px 10px;
+  border-radius: 999px;
+  background: var(--c-accent-soft);
+  color: var(--c-accent);
+  font-size: 12px;
+  font-weight: 500;
+  max-width: 100%;
+}
+
+.cal-chip span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cal-chip .icon {
+  width: 12px;
+  height: 12px;
+  flex: none;
+}
+
+.cal-group__count {
+  font-family: var(--c-mono);
+  font-size: 11px;
+  color: var(--c-faint);
+}
+
+.cal-group__none {
+  padding: 3px 0 5px 24px;
+  font-size: 12px;
+  color: var(--c-faint);
+}
+
+.cal-person__words {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.cal-person__note {
+  font-size: 11px;
+  color: var(--c-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cal-person {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 5px 6px;
+  margin: 0 -6px;
+  width: calc(100% + 12px);
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.cal-person:hover {
+  background: var(--c-surface-2);
+}
+
+.cal-person.is-on {
+  background: var(--c-accent-soft);
+}
+
+.cal-person__name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The week's box (WeekList.tsx). */
+.cal-grid-box {
+  min-height: 0;
+  min-width: 0;
+  border: 1px solid var(--c-line);
+  border-radius: 14px;
+  background: var(--c-surface);
+  overflow: hidden;
+}
+
+.cal-scroll {
+  height: 100%;
+  overflow: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.cal-grid {
+  display: grid;
+  min-width: 100%;
+  position: relative;
+}
+
+.cal-corner,
+.cal-dayhead,
+.cal-messaged-label,
+.cal-messaged,
+.cal-agents-label,
+.cal-agents {
+  background: var(--c-surface);
+  border-bottom: 1px solid var(--c-line);
+}
+
+.cal-corner,
+.cal-messaged-label,
+.cal-agents-label {
+  padding: 0 8px;
+  position: sticky;
+  left: 0;
+  border-right: 1px solid var(--c-line);
+}
+
+.cal-corner {
+  top: 0;
+  z-index: 5;
+  height: var(--cal-head);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cal-zone {
+  font-family: var(--c-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--c-muted);
+  background: var(--c-surface-2);
+  border-radius: 999px;
+  padding: 3px 7px;
+}
+
+.cal-dayhead {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  height: var(--cal-head);
+  border-right: 1px solid var(--c-line);
+}
+
+.cal-dayhead.is-last {
+  border-right: 0;
+}
+
+.cal-day {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  position: relative;
+  color: var(--c-muted);
+}
+
+.cal-day:hover {
+  color: var(--c-text);
+}
+
+.cal-day__num {
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.cal-day__name {
+  font-family: var(--c-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--c-faint);
+}
+
+.cal-dayhead.is-today .cal-day {
+  color: var(--c-text);
+}
+
+.cal-dayhead.is-today .cal-day__name {
+  color: var(--c-text);
+}
+
+.cal-dayhead.is-today .cal-day::after {
+  content: "";
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: -1px;
+  height: 2px;
+  background: var(--c-text);
+  border-radius: 1px;
+}
+
+.cal-dayhead.is-picked .cal-day__num {
+  color: var(--c-accent);
+}
+
+/* Whom the captain messaged each day: a row of faces under the day's head, no times (his word); a face narrows the week to them. */
+.cal-messaged-label {
+  padding: 0 8px;
+  top: var(--cal-head);
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: var(--c-muted);
+  height: var(--cal-messaged);
+}
+
+.cal-messaged {
+  position: sticky;
+  top: var(--cal-head);
+  z-index: 2;
+  height: var(--cal-messaged);
+  padding: 0 6px;
+  display: flex;
+  align-items: center;
+  border-right: 1px solid var(--c-line);
+  min-width: 0;
+  overflow: hidden;
+}
+
+.cal-messaged.is-last {
+  border-right: 0;
+}
+
+.cal-messaged .cal-faces {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+.cal-messaged .cal-face {
+  width: 22px;
+  height: 22px;
+  font-size: 9px;
+  line-height: 19px;
+  margin-left: -6px;
+  border-color: var(--c-surface);
+  transition: transform 0.12s ease;
+}
+
+.cal-messaged .cal-face:first-child {
+  margin-left: 0;
+}
+
+.cal-messaged button.cal-face {
+  cursor: pointer;
+}
+
+.cal-messaged button.cal-face:hover {
+  transform: translateY(-1px);
+  z-index: 1;
+  position: relative;
+}
+
+.cal-messaged .cal-face.is-on {
+  box-shadow: 0 0 0 2px var(--c-accent);
+}
+
+.cal-label--short {
+  display: none;
+}
+
+/* The agents each day: the messages he sent them and the sessions begun, a summary, never at a time; it opens the day. */
+.cal-agents-label {
+  top: calc(var(--cal-head) + var(--cal-messaged));
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: var(--c-muted);
+  height: var(--cal-agents);
+}
+
+.cal-agents {
+  position: sticky;
+  top: calc(var(--cal-head) + var(--cal-messaged));
+  z-index: 2;
+  height: var(--cal-agents);
+  padding: 0 3px;
+  display: flex;
+  align-items: center;
+  border-right: 1px solid var(--c-line);
+  min-width: 0;
+  overflow: hidden;
+}
+
+.cal-agents.is-last {
+  border-right: 0;
+}
+
+.cal-agents__sum,
+.cal-rituals__sum {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+  min-width: 0;
+  padding: 3px 6px;
+  border-radius: 7px;
+  font-size: 11px;
+  color: var(--c-muted);
+}
+
+.cal-agents__sum:hover,
+.cal-rituals__sum:hover {
+  background: var(--c-surface-2);
+  color: var(--c-text);
+}
+
+.cal-agents__sum span,
+.cal-rituals__sum span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cal-agents__sum .icon,
+.cal-rituals__sum .icon {
+  width: 12px;
+  height: 12px;
+  flex: none;
+}
+
+/* The rituals each day, under the agents and sticky with them: a summary, how many were done over how many the day
+   asked for ("5/5", day.ts's ritualsSumOf), that opens the day, which lists them. A day all done reads in the text's
+   colour, the rest muted. */
+.cal-rituals-label,
+.cal-rituals {
+  position: sticky;
+  top: calc(var(--cal-head) + var(--cal-messaged) + var(--cal-agents));
+  height: var(--cal-rituals);
+  background: var(--c-surface);
+  border-bottom: 1px solid var(--c-line);
+  border-right: 1px solid var(--c-line);
+}
+
+.cal-rituals-label {
+  left: 0;
+  z-index: 3;
+  padding: 0 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: var(--c-muted);
+}
+
+.cal-rituals {
+  z-index: 2;
+  padding: 0 3px;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.cal-rituals.is-last {
+  border-right: 0;
+}
+
+.cal-rituals__sum span {
+  font-variant-numeric: tabular-nums;
+}
+
+.cal-rituals__sum.is-all {
+  color: var(--c-text);
+}
+
+.cal-card--messages .icon { color: var(--c-blue); }
+.cal-card--calls .icon { color: var(--c-in); }
+.cal-card--hangouts .icon { color: var(--c-mild); }
+.cal-card--llm .icon { color: var(--c-treated); }
+.cal-card--workouts .icon { color: var(--c-text); }
+
+.cal-faces {
+  display: flex;
+  margin-top: auto;
+  padding-top: 3px;
+}
+
+.cal-face {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  margin-left: -5px;
+  border: 1.5px solid var(--c-surface-2);
+  background: oklch(0.9 0.035 var(--face-h, 200));
+  color: var(--c-text);
+  font: 500 8px/15px var(--c-sans);
+  font-style: normal;
+  text-align: center;
+  letter-spacing: 0.02em;
+  flex: none;
+  overflow: hidden;
+}
+
+.cal-face:first-child {
+  margin-left: 0;
+}
+
+.cal-face--more {
+  background: var(--c-surface);
+  border-color: var(--c-line-2);
+  color: var(--c-muted);
+}
+
+.console--dark .cal-face {
+  background: oklch(0.32 0.04 var(--face-h, 200));
+  border-color: var(--c-surface-2);
+}
+
+.cal-person .cal-face {
+  width: 22px;
+  height: 22px;
+  margin-left: 0;
+  border-color: var(--c-surface);
+  font-size: 9px;
+  line-height: 19px;
+}
+
+@media (max-width: 899px) {
+  .cal {
+    --cal-gutter: 52px;
+    --cal-head: 54px;
+    --cal-messaged: 34px;
+  }
+
+  .cal__bar {
+    padding: 10px 16px 8px;
+  }
+
+  .cal__title h2 {
+    font-size: 17px;
+  }
+
+  .cal__nav button {
+    height: 30px;
+    min-width: 30px;
+  }
+
+  .cal__error {
+    margin: 0 16px 8px;
+  }
+
+  /* The kinds' toggles are their icons alone (their names in their titles), the person picked beside them. */
+  .cal__filters {
+    padding: 0 16px 8px;
+    gap: 8px;
+  }
+
+  .cal-kind {
+    padding: 0 8px;
+  }
+
+  .cal-kind__name {
+    display: none;
+  }
+
+  .cal-kind--split {
+    padding: 0;
+  }
+
+  .cal__filters .cal-chip {
+    min-width: 0;
+  }
+
+  .cal__body {
+    padding: 0;
+  }
+
+  .cal-grid-box {
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+    border-bottom: 0;
+  }
+
+  .cal-day__num {
+    font-size: 18px;
+  }
+
+  /* The gutter is too narrow for the word. */
+  .cal-label--long {
+    display: none;
+  }
+
+  .cal-label--short {
+    display: inline;
+  }
+}
+
+/* Day, Week, Month and Year, in the bar: four buttons joined, the one shown filled. */
+.cal__nav .cal__modes {
+  display: inline-flex;
+  margin-right: 6px;
+  border: 1px solid var(--c-line-2);
+  border-radius: 9px;
+  padding: 2px;
+  background: var(--c-surface-2);
+}
+
+.cal__nav .cal__modes button {
+  height: 26px;
+  padding: 0 11px;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  box-shadow: none;
+  color: var(--c-muted);
+}
+
+.cal__nav .cal__modes button:hover {
+  background: none;
+  color: var(--c-text);
+}
+
+.cal__nav .cal__modes button.is-on {
+  background: var(--c-surface);
+  color: var(--c-text);
+  box-shadow: 0 0 0 1px var(--c-line), var(--c-shadow);
+}
+
+/* The month: the weekdays' names, then a week a row, its number at the left (opening the week) and seven cells, filling
+   the height (scrolling when it cannot). */
+.cal-month-box {
+  min-height: 0;
+  min-width: 0;
+  border: 1px solid var(--c-line);
+  border-radius: 14px;
+  background: var(--c-surface);
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.cal-month {
+  --cal-mrow: 92px;
+  --cal-wk: 34px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-height: 100%;
+}
+
+.cal-month__heads,
+.cal-month__week {
+  display: grid;
+  grid-template-columns: var(--cal-wk) repeat(7, minmax(0, 1fr));
+}
+
+.cal-month__head--wk {
+  text-align: center;
+  padding-left: 0;
+  padding-right: 0;
+  border-right: 1px solid var(--c-line);
+}
+
+/* A week's selector: its number at the row's left, an arrow under it on hovering, the row outlined so the week it opens shows. */
+.cal-mweek {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 4px;
+  padding-top: 9px;
+  border-right: 1px solid var(--c-line);
+  background: var(--c-surface);
+  color: var(--c-faint);
+  font-family: var(--c-mono);
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+  transition: background-color 0.12s ease, color 0.12s ease;
+}
+
+.cal .cal-mweek .icon {
+  width: 12px;
+  height: 12px;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
+.cal-month__week.is-now .cal-mweek {
+  color: var(--c-text);
+}
+
+.cal-mweek:hover,
+.cal-mweek:focus-visible {
+  background: var(--c-accent-soft);
+  color: var(--c-accent);
+}
+
+.cal .cal-mweek:hover .icon,
+.cal .cal-mweek:focus-visible .icon {
+  opacity: 1;
+}
+
+.cal-mweek:focus-visible {
+  outline-offset: -2px;
+}
+
+/* Over its own tint, so a day's messages still show. */
+.cal-month__week:has(.cal-mweek:hover) .cal-mday {
+  box-shadow: inset 0 0 0 999px color-mix(in srgb, var(--c-accent) 6%, transparent);
+}
+
+.cal-month__heads {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--c-surface);
+  border-bottom: 1px solid var(--c-line);
+}
+
+.cal-month__head {
+  padding: 9px 10px 8px;
+  font-family: var(--c-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--c-faint);
+}
+
+.cal-month__week + .cal-month__week {
+  border-top: 1px solid var(--c-line);
+}
+
+.cal-mday {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 3px;
+  min-width: 0;
+  min-height: 0;
+  padding: 7px 8px 8px;
+  overflow: hidden;
+  border-right: 1px solid var(--c-line);
+  transition: background-color 0.12s ease;
+  container-type: inline-size;
+}
+
+.cal-mday:last-child {
+  border-right: 0;
+}
+
+/* A day's messages tint it (a day of the month alone): a quarter of the month's busiest a step, in the Messaged blue. */
+.cal-mday[data-shade="1"] { background: color-mix(in srgb, var(--c-blue) 3%, var(--c-surface)); }
+.cal-mday[data-shade="2"] { background: color-mix(in srgb, var(--c-blue) 6%, var(--c-surface)); }
+.cal-mday[data-shade="3"] { background: color-mix(in srgb, var(--c-blue) 10%, var(--c-surface)); }
+.cal-mday[data-shade="4"] { background: color-mix(in srgb, var(--c-blue) 15%, var(--c-surface)); }
+
+.cal-mday:hover {
+  box-shadow: inset 0 0 0 1px var(--c-line-2);
+}
+
+.cal-mday:focus-visible {
+  outline-offset: -2px;
+}
+
+/* A day outside the month dims its number; its counts stay quieter but readable (at 0.4 the muted grey all but vanished
+   on a white cell). */
+.cal-mday.is-out .cal-mday__head,
+.cal-mday.is-out .cal-mday__dots {
+  opacity: 0.4;
+}
+
+.cal-mday.is-out .cal-mday__chips {
+  opacity: 0.8;
+}
+
+.cal-mday__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  min-width: 0;
+}
+
+.cal-mday__num {
+  position: relative;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--c-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.cal-mday.is-today .cal-mday__num {
+  color: var(--c-text);
+  font-weight: 600;
+}
+
+.cal-mday.is-today .cal-mday__num::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 2px;
+  background: var(--c-text);
+  border-radius: 1px;
+}
+
+.cal-mday.is-picked .cal-mday__num {
+  color: var(--c-accent);
+}
+
+/* A day's counts, one line along its foot: its messages, calls, hangouts, agent messages and workouts (wrapping onto a
+   second line only when a narrow cell leaves them no room). */
+.cal-mday__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px 7px;
+  margin-top: auto;
+}
+
+.cal-mchip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  color: var(--c-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.cal .cal-mchip .icon {
+  width: 12px;
+  height: 12px;
+  flex: none;
+}
+
+/* A narrow cell (a small window's) draws its counts tighter, so four still fit one line. */
+@container (max-width: 140px) {
+  .cal-mday__chips {
+    gap: 3px 4px;
+  }
+
+  .cal-mchip {
+    gap: 1px;
+    font-size: 10.5px;
+    letter-spacing: -0.02em;
+  }
+
+  .cal .cal-mchip .icon {
+    width: 10px;
+    height: 10px;
+  }
+}
+
+.cal-mday__dots {
+  display: none;
+}
+
+.cal-mdot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--c-muted);
+}
+
+.cal-mdot--calls { background: var(--c-in); }
+.cal-mdot--hangouts { background: var(--c-mild); }
+.cal-mdot--llm { background: var(--c-treated); }
+.cal-mdot--workouts { background: var(--c-text); }
+.cal-mdot--habits { background: var(--c-muted); }
+
+@media (max-width: 899px) {
+  .cal__bar {
+    row-gap: 8px;
+  }
+
+  .cal__title {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .cal__nav .cal__modes button {
+    height: 24px;
+    padding: 0 8px;
+  }
+
+  .cal-month-box {
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+    border-bottom: 0;
+  }
+
+  .cal-month {
+    --cal-mrow: 58px;
+    --cal-wk: 24px;
+  }
+
+  .cal-mweek {
+    padding-top: 7px;
+    font-size: 9.5px;
+  }
+
+  .cal .cal-mweek .icon {
+    display: none;
+  }
+
+  .cal-month__head {
+    padding: 8px 0 7px;
+    text-align: center;
+    letter-spacing: 0.06em;
+  }
+
+  .cal-mday {
+    align-items: center;
+    padding: 6px 2px;
+    gap: 5px;
+  }
+
+  .cal-mday__head {
+    justify-content: center;
+  }
+
+  .cal-mday__chips {
+    display: none;
+  }
+
+  .cal-mday__dots {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 3px;
+  }
+}
+
+/* The kinds' counts (the captain: "we can just combine the count. Into the filter chips"): on the day and the year,
+   each toggle on carries its kind's count after its name. */
+.cal-kind__count {
+  font-family: var(--c-mono);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--c-muted);
+}
+
+@media (max-width: 899px) {
+  /* On a phone the toggles are their icons and counts, and they wrap. */
+  .cal__filters,
+  .cal__kinds {
+    flex-wrap: wrap;
+  }
+
+  .cal__kinds {
+    gap: 5px;
+  }
+
+  .cal-kind {
+    gap: 5px;
+  }
+}

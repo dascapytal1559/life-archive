@@ -1,0 +1,9 @@
+{
+  "name": "life-archive-journal",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "The life archive's journal module: the captain's journals in his Obsidian vault, and the voice journals transcribed into it on this Mac each day at 06:00, by a launchd job of its own.",
+  "lifeArchive": true,
+  "lifeArchiveReady": false
+}

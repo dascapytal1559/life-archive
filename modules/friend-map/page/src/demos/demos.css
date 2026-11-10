@@ -1,0 +1,1983 @@
+/* The map views: a dark stage filling the window, with the header, legend
+   and hover card floating over it. On the live views the side panel docks as
+   a column on the right and the map narrows to the rest of the window (the
+   drawing of a view that keeps its size sliding aside under the panel); the
+   frozen views keep it floating over the map. Everything is scoped under .demos, and
+   the colours match COLORS in palette.ts. A view's own styles go in its own
+   stylesheet, imported by the view. */
+
+/* friend-map is dark only: the page's colour scheme (its form controls and scrollbars) is the dark one. The app's page
+   declares it before anything loads (index.html); this declares it for the static demo's too, once the map is drawn. */
+:root {
+  color-scheme: dark;
+}
+
+.demos {
+  --night: #070b16;
+  --star: #e8eefc;
+  --dim: #8d97ad;
+  --me: #f4b860;
+  --them: #6fd0c6;
+  --warm: #ff9e5e;
+  --cool: #6aa8ff;
+  --call: #5fe08a;
+  --faint: rgba(200, 214, 255, 0.08);
+  /* Titles and names worth a little ceremony; system-ui for everything else. */
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  color: var(--star);
+  background: radial-gradient(ellipse at 50% 40%, #121b33 0%, var(--night) 70%);
+  font-family: var(--sans);
+  --dock: clamp(360px, 36vw, 420px);
+  /* The frozen views' floating panel, and its margin from the window's edge. */
+  --drawer: 420px;
+  --drawer-margin: 12px;
+  --dock-move: 0.28s cubic-bezier(0.3, 0, 0.2, 1);
+}
+
+/* Everything but the docked panel: the stage and all that floats over it. */
+.demos__map {
+  position: absolute;
+  inset: 0;
+  /* What floats over the map fits the map's width, not the window's. */
+  container-type: size;
+  transition: right var(--dock-move);
+}
+
+/* Where the map's slide ends, at once: never seen, measured so the map can be
+   drawn at its new size from the frame it starts to grow (mapSize.ts). */
+.demos__room {
+  position: absolute;
+  inset: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.demos--docked .demos__map,
+.demos--docked .demos__room {
+  right: var(--dock);
+}
+
+.demos__dock {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: var(--dock);
+  transform: translateX(100%);
+  visibility: hidden;
+  transition: transform var(--dock-move), visibility 0s 0.28s;
+}
+
+.demos--docked .demos__dock {
+  transform: none;
+  visibility: visible;
+  transition: transform var(--dock-move);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Still a transition, so the dock hears when it has closed. */
+  .demos {
+    --dock-move: 0.01s linear;
+  }
+}
+
+.demos__stage {
+  position: absolute;
+  inset: 0;
+}
+
+/* A view that keeps its size (Orbits, Circles, the Spider web: Demo.keepsSize):
+   its stage stays the window's width while the map beside the panel narrows,
+   and slides left by half the panel on the panel's own transition, so what the
+   panel leaves of it is centred. Its own layer, so the slide is only moved by
+   the compositor, and the map is never drawn again for the panel. */
+.demos--keeps-size .demos__stage {
+  right: auto;
+  width: 100vw;
+  will-change: transform;
+  transition: transform var(--dock-move);
+}
+
+.demos--keeps-size.demos--docked .demos__stage {
+  transform: translateX(calc(var(--dock) / -2));
+}
+
+.demos__stage svg {
+  display: block;
+  user-select: none;
+}
+
+.demos__status {
+  position: absolute;
+  inset: 45% 0 auto;
+  text-align: center;
+  color: var(--dim);
+}
+
+.demos__header {
+  /* Every control in the header's top-right cluster (find box, Methodology, the Query bar's box, Hide) is this tall. */
+  --control-h: 32px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  padding: 14px 22px 0;
+  pointer-events: none;
+}
+
+.demos__header > * {
+  pointer-events: auto;
+}
+
+.demos__header > .view-switcher {
+  min-width: 190px;
+}
+
+.demos__controls {
+  margin-left: auto;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px 14px;
+  color: var(--dim);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.demos__controls label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.demos__people {
+  padding: 5px 12px;
+  border: 1px solid rgba(141, 151, 173, 0.28);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--star);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.demos__people:hover {
+  background: rgba(141, 151, 173, 0.16);
+}
+
+.demos__line {
+  position: absolute;
+  left: 22px;
+  bottom: 16px;
+  /* Clear of the legend in the other corner. */
+  max-width: min(560px, 40cqw, 100cqw - 460px);
+  margin: 0;
+  color: var(--dim);
+  font-size: 12.5px;
+  line-height: 1.5;
+  pointer-events: none;
+}
+
+.demo-legend {
+  position: absolute;
+  right: 22px;
+  bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(10, 16, 32, 0.66);
+  border: 1px solid var(--faint);
+  backdrop-filter: blur(6px);
+  color: var(--dim);
+  font-size: 12px;
+}
+
+.demo-legend > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.demo-swatch {
+  display: inline-block;
+  box-sizing: border-box;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.demo-tip {
+  position: absolute;
+  z-index: 5;
+  width: 250px;
+  padding: 12px 14px 10px;
+  border-radius: 12px;
+  background: rgba(14, 21, 40, 0.94);
+  border: 1px solid rgba(200, 214, 255, 0.16);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+  font-size: 12.5px;
+}
+
+.demo-tip strong {
+  display: block;
+  font: 500 17px/1.25 var(--serif);
+}
+
+.demo-tip__who {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.demo-tip .tag-chips {
+  margin-top: 4px;
+}
+
+.demo-tip dl {
+  margin: 8px 0 6px;
+  display: grid;
+  gap: 3px;
+}
+
+.demo-tip dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.demo-tip dt {
+  flex: none;
+  color: var(--dim);
+}
+
+.demo-tip dd {
+  margin: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.demo-tip__hint {
+  color: rgba(141, 151, 173, 0.7);
+  font-size: 11px;
+}
+
+/* The person panel on the map views (PeoplePanel.tsx, app.css): a dark card
+   in the night's colours, so it belongs with the dark map it docks beside or
+   floats over, in place of the app's white panel, which the Table and the
+   Calendar keep. The panel is styled through the app's colour tokens, so the
+   card sets them again here for everything in it: the inks, the lines, the
+   paper of its chips, boxes and bubbles, and the accent. The accent is the
+   view's own glow (--panel-glow and --panel-beam, which Demos.tsx sets on
+   .demos from panelGlow.ts: the Spider web's strands and rings, Orbits' sun;
+   the sun's orange and Orbits' teal otherwise). The card's chrome: a glowing
+   edge against the map, a faint scan-line weave over its ground, and labels
+   set small, spaced and in capitals like the map's own. */
+.demos .side-panel {
+  --glow: var(--panel-glow, var(--me));
+  --beam: var(--panel-beam, var(--them));
+  --ink: var(--star);
+  --muted: var(--dim);
+  --line: color-mix(in srgb, var(--glow) 26%, #1a2238);
+  --paper: color-mix(in srgb, var(--glow) 7%, #10172a);
+  --wash: color-mix(in srgb, var(--glow) 5%, #090d1a);
+  --accent: var(--glow);
+  --danger: #ff6b7a;
+  /* Hangouts opposite the glow on the colour wheel, so they never read as the calls (drawn in the accent, the glow) whatever the view's colour: blue against the Spider web's amber, coral against teal. */
+  --hangout: oklch(from var(--glow) 0.74 max(c, 0.13) calc(h + 180));
+  --panel-label: 600 11px/1.3 var(--sans);
+  --panel-spacing: 0.1em;
+  color-scheme: dark;
+  color: var(--ink);
+  background:
+    linear-gradient(to right, transparent, color-mix(in srgb, var(--glow) 70%, transparent) 35%, color-mix(in srgb, var(--glow) 70%, transparent) 65%, transparent) top / 100% 1px no-repeat,
+    repeating-linear-gradient(to bottom, transparent 0 2px, rgba(0, 0, 0, 0.16) 2px 3px),
+    radial-gradient(ellipse 120% 40% at 50% 0%, color-mix(in srgb, var(--glow) 13%, transparent) 0%, transparent 70%),
+    linear-gradient(to bottom, color-mix(in srgb, var(--glow) 3%, var(--wash)), var(--wash));
+  scrollbar-color: color-mix(in srgb, var(--glow) 35%, transparent) transparent;
+}
+
+.demos--web .side-panel {
+  --panel-label: 500 10.5px/1.3 ui-monospace, Menlo, monospace;
+  --panel-spacing: 0.16em;
+}
+
+.demos__docked.side-panel {
+  width: 100%;
+  border-left: 1px solid color-mix(in srgb, var(--glow) 55%, transparent);
+  box-shadow:
+    -14px 0 44px rgba(0, 0, 0, 0.55),
+    -1px 0 12px color-mix(in srgb, var(--glow) 30%, transparent),
+    inset 1px 0 0 color-mix(in srgb, var(--glow) 18%, transparent);
+}
+
+/* The card's corners, on the dock (which does not scroll, as the panel does): a bracket at the top left, another at the
+   bottom right, and a thread of light along the top, drawn over the panel and taking no clicks. */
+.demos__dock::before,
+.demos__dock::after {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  width: 14px;
+  height: 14px;
+  border: 0 solid color-mix(in srgb, var(--panel-glow, var(--me)) 85%, white);
+  pointer-events: none;
+  filter: drop-shadow(0 0 4px var(--panel-glow, var(--me)));
+}
+
+.demos__dock::before {
+  top: 8px;
+  left: 8px;
+  border-width: 1.5px 0 0 1.5px;
+}
+
+.demos__dock::after {
+  right: 8px;
+  bottom: 8px;
+  border-width: 0 1.5px 1.5px 0;
+}
+
+.demos__drawer.side-panel {
+  position: absolute;
+  z-index: 6;
+  top: var(--drawer-margin);
+  right: var(--drawer-margin);
+  bottom: var(--drawer-margin);
+  width: var(--drawer);
+  height: auto;
+  border: 1px solid color-mix(in srgb, var(--glow) 40%, transparent);
+  border-radius: 14px;
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.55),
+    0 0 18px color-mix(in srgb, var(--glow) 22%, transparent);
+}
+
+/* The demo's note (demoMode.css), centred on what the floating panel leaves of the map. */
+.demos--drawer .demo-mode {
+  left: calc((100% - var(--drawer) - var(--drawer-margin)) / 2);
+}
+
+/* The card's labels, set like the map's own: a field's word (Tags, Location, Note, Names), the folds' ("▸ Messages ·
+   13", "▸ Accounts · 1", "▸ Group chats · 2"), a day's date over its messages, and the Events heading, lit. What a field
+   holds keeps its type, so nothing typed or read is set in capitals. */
+.demos .side-panel .field > span:first-child:not(.field__head),
+.demos .side-panel .field__head--name > span,
+.demos .side-panel .field__toggle,
+.demos .side-panel .timeline__day h4 {
+  font: var(--panel-label);
+  letter-spacing: var(--panel-spacing);
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--glow) 72%, var(--muted));
+}
+
+.demos .side-panel .notes h3,
+.demos .side-panel .review h3,
+.demos .side-panel .side-panel__header h2 {
+  font: var(--panel-label);
+  font-size: 12px;
+  letter-spacing: var(--panel-spacing);
+  text-transform: uppercase;
+  color: var(--glow);
+  text-shadow: 0 0 8px color-mix(in srgb, var(--glow) 55%, transparent);
+}
+
+.demos .side-panel .field__toggle:hover,
+.demos .side-panel .field__toggle:focus-visible,
+.demos .side-panel .field__toggle.timeline__toggle:hover,
+.demos .side-panel .field__toggle.timeline__toggle:focus-visible {
+  color: var(--glow);
+}
+
+/* Its close and back buttons light up in the glow. */
+.demos .side-panel .side-panel__close:hover,
+.demos .side-panel .side-panel__close:focus-visible,
+.demos .side-panel .side-panel__back:hover,
+.demos .side-panel .side-panel__back:focus-visible {
+  color: var(--glow);
+  text-shadow: 0 0 8px color-mix(in srgb, var(--glow) 60%, transparent);
+}
+
+/* Their names: the first chip lit in the glow, the rest quiet. */
+.demos .side-panel .name-chip {
+  border-color: color-mix(in srgb, var(--glow) 18%, transparent);
+  background: color-mix(in srgb, var(--glow) 5%, var(--paper));
+}
+
+.demos .side-panel .name-chip--first {
+  border-color: color-mix(in srgb, var(--glow) 55%, transparent);
+  background: color-mix(in srgb, var(--glow) 14%, var(--paper));
+  color: var(--ink);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--glow) 22%, transparent), inset 0 0 0 1px color-mix(in srgb, var(--glow) 15%, transparent);
+}
+
+.demos .side-panel .tag-chip {
+  border: 1px solid color-mix(in srgb, var(--glow) 28%, transparent);
+  padding-block: 0;
+  background: color-mix(in srgb, var(--glow) 10%, var(--paper));
+}
+
+.demos .side-panel .tag-chip--archive,
+.demos .side-panel .tag-chip--alias {
+  border-color: color-mix(in srgb, var(--muted) 30%, transparent);
+  background: color-mix(in srgb, var(--muted) 10%, var(--paper));
+}
+
+/* The platform badges in the beam: the second colour, apart from the glow. */
+.demos .side-panel .platform-badge {
+  background: color-mix(in srgb, var(--beam) 14%, var(--paper));
+  color: var(--beam);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--beam) 30%, transparent);
+}
+
+/* Lit buttons and chips: dark type on the glow, which is light. */
+.demos .side-panel .button--primary,
+.demos .side-panel .filter-chip--active,
+.demos .side-panel .filter-chip--active .count,
+.demos .side-panel .time-box__half:focus-visible {
+  color: var(--night);
+}
+
+.demos .side-panel .filter-chip--active .count {
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.demos .side-panel .button--primary {
+  box-shadow: 0 0 12px color-mix(in srgb, var(--glow) 35%, transparent);
+}
+
+.demos .side-panel .count {
+  background: color-mix(in srgb, var(--glow) 18%, var(--paper));
+}
+
+/* The chat: its box glows faintly at the edge; your bubbles in the glow's tint, theirs plain. */
+.demos .side-panel .timeline__scroller {
+  background: rgba(0, 0, 0, 0.22);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--glow) 6%, transparent);
+}
+
+.demos .side-panel .message {
+  background: color-mix(in srgb, var(--star) 4%, var(--paper));
+  border-color: color-mix(in srgb, var(--star) 10%, var(--paper));
+}
+
+.demos .side-panel .message--self {
+  background: color-mix(in srgb, var(--glow) 12%, var(--paper));
+  border-color: color-mix(in srgb, var(--glow) 32%, var(--paper));
+}
+
+.demos .side-panel .message--catch-up {
+  background: color-mix(in srgb, var(--glow) 6%, var(--paper));
+}
+
+/* Review's tiers (the People list, on the frozen views): the same words in the night's colours. */
+.demos .side-panel .tier--high {
+  background: color-mix(in srgb, var(--call) 22%, var(--paper));
+  color: var(--call);
+}
+
+.demos .side-panel .tier--medium {
+  background: color-mix(in srgb, var(--me) 22%, var(--paper));
+  color: var(--me);
+}
+
+/* The identicon's ring and the chart's base line, a touch lighter on the dark. */
+.demos .side-panel .identicon {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--glow) 35%, transparent);
+}
+
+.demos .side-panel .activity-chart__base {
+  stroke: color-mix(in srgb, var(--glow) 35%, var(--line));
+}
+
+/* Native controls in the glow: the Should reach out box, a form's date and selects. */
+.demos .side-panel input,
+.demos .side-panel textarea,
+.demos .side-panel select {
+  accent-color: var(--glow);
+}
+
+.demos .side-panel input:focus-visible,
+.demos .side-panel textarea:focus-visible,
+.demos .side-panel select:focus-visible {
+  outline: 1px solid color-mix(in srgb, var(--glow) 70%, transparent);
+  outline-offset: 0;
+  box-shadow: 0 0 10px color-mix(in srgb, var(--glow) 25%, transparent);
+}
+
+/* A laptop-wide map: the header closes up a little to keep it on one row. */
+@container (max-width: 1240px) {
+  .demos__header {
+    column-gap: 16px;
+  }
+
+  .demos__header > .view-switcher {
+    min-width: 0;
+  }
+
+  .demos__controls {
+    column-gap: 10px;
+  }
+}
+
+/* A narrow map (the panel docked on a laptop, say): a tighter header, and
+   the people count gives way first. */
+@container (max-width: 980px) {
+  .demos__header {
+    column-gap: 14px;
+  }
+}
+
+@container (max-width: 760px) {
+  .demos__controls > span {
+    display: none;
+  }
+
+  .view-switcher__crumb {
+    white-space: nowrap;
+  }
+
+  .demos__line {
+    display: none;
+  }
+}
+
+/* Shared marks */
+
+.demo-person {
+  cursor: pointer;
+}
+
+.demo-label {
+  fill: var(--star);
+  font-size: 11.5px;
+  paint-order: stroke;
+  stroke: rgba(7, 11, 22, 0.85);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.demo-axis {
+  fill: var(--dim);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+
+.demo-fade {
+  transition: opacity 0.25s ease;
+}
+
+.demo-placeholder {
+  position: absolute;
+  top: 96px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 22px;
+  border-radius: 12px;
+  background: rgba(10, 16, 32, 0.72);
+  border: 1px solid var(--faint);
+  color: var(--dim);
+  font-size: 13px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.demo-placeholder strong {
+  color: var(--star);
+  font: italic 400 22px/1.2 var(--serif);
+}
+
+.app__problems.demos__problems {
+  position: absolute;
+  top: auto;
+  bottom: 64px;
+}
+
+/* What is wrong in data/settings.json, under the header. */
+.app__problems.demos__settings-problems {
+  position: absolute;
+  top: 152px;
+}
+
+/* Methodology: the header button, and the panel it opens over the
+   main view's map, under the header on the right. */
+
+.demos__method {
+  box-sizing: border-box;
+  height: var(--control-h, 32px);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  border: 1px solid rgba(141, 151, 173, 0.28);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--dim);
+  font: inherit;
+  cursor: pointer;
+}
+
+.demos__method:hover,
+.demos__method[aria-expanded="true"],
+.demos__method[aria-pressed="true"] {
+  color: var(--star);
+  background: rgba(141, 151, 173, 0.16);
+}
+
+/* Finding a person: the Table's search box, and Orbits' find box (FindBox.tsx) with its list of who it finds. */
+.demos__find {
+  box-sizing: border-box;
+  width: 180px;
+  height: var(--control-h, 32px);
+  padding: 0 10px;
+  border: 1px solid rgba(141, 151, 173, 0.28);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--star);
+  font: inherit;
+}
+
+.demos__find::placeholder {
+  color: var(--dim);
+}
+
+.find-box {
+  position: relative;
+}
+
+/* Over the Query bar's boxes (z-index 6), as the header's panels are. */
+.find-box__list {
+  position: absolute;
+  z-index: 7;
+  top: calc(100% + 6px);
+  left: 0;
+  width: max(100%, 280px);
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  box-sizing: border-box;
+  border-radius: 10px;
+  background: #0c1224;
+  border: 1px solid rgba(200, 214, 255, 0.16);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+  white-space: normal;
+}
+
+.find-box__option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  border-radius: 6px;
+  color: var(--star);
+  cursor: pointer;
+}
+
+.find-box__option[aria-selected="true"] {
+  background: rgba(200, 214, 255, 0.1);
+}
+
+.find-box__identicon {
+  flex: none;
+  border-radius: 50%;
+}
+
+.find-box__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.find-box__secondary,
+.find-box__rank,
+.find-box__note {
+  color: var(--dim);
+}
+
+.find-box__rank {
+  flex: none;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.find-box__note {
+  padding: 5px 8px;
+  font-size: 12px;
+}
+
+.method {
+  position: absolute;
+  z-index: 4;
+  /* Under the header, however tall the Query bar makes it (--header, from Demos.tsx). */
+  top: var(--header, 76px);
+  right: 22px;
+  /* Room for the curves and their working beside the map. */
+  width: min(640px, 100cqw - 44px);
+  max-height: calc(100cqh - var(--header, 76px) - 16px);
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: 18px 24px 20px;
+  border-radius: 14px;
+  background: #0c1224;
+  border: 1px solid rgba(200, 214, 255, 0.16);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+  color: var(--dim);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.method__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.method h2 {
+  margin: 0;
+  color: var(--star);
+  font: italic 400 22px/1.2 var(--serif);
+}
+
+.method__close {
+  border: none;
+  background: none;
+  color: var(--dim);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.method__close:hover {
+  color: var(--star);
+}
+
+/* At a glance: messages plus time together, times fading, equals closeness;
+   each tile opens its part below. */
+.method__glance {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  margin: 12px 0 14px;
+}
+
+.method__glance figcaption {
+  margin-top: 4px;
+  font-size: 12px;
+  text-align: center;
+}
+
+.method__sources {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.method__op {
+  align-self: center;
+  color: var(--dim);
+  font: 400 18px/1 var(--serif);
+  text-align: center;
+}
+
+.method__tile {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border: 1px solid rgba(200, 214, 255, 0.16);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--dim);
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.4;
+  text-align: center;
+  cursor: pointer;
+}
+
+.method__tile:hover {
+  border-color: rgba(200, 214, 255, 0.34);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.method__tile strong {
+  color: var(--star);
+  font-weight: 600;
+}
+
+.method__tile-title {
+  color: var(--star);
+  font: italic 400 15px/1.3 var(--serif);
+}
+
+/* The hour's worth, the one number to remember. */
+.method__tile--hour {
+  border-color: rgba(244, 184, 96, 0.4);
+  background: rgba(244, 184, 96, 0.08);
+}
+
+.method__tile--hour strong {
+  color: var(--me);
+  font-size: 15px;
+}
+
+.method__tile--result {
+  border-color: rgba(244, 184, 96, 0.22);
+}
+
+/* The parts, each closed to its title and one line. */
+.method__part {
+  border-top: 1px solid var(--faint);
+}
+
+.method__part summary {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0 8px;
+  padding: 9px 0;
+  list-style: none;
+  cursor: pointer;
+}
+
+.method__part summary::-webkit-details-marker {
+  display: none;
+}
+
+.method__part summary::before {
+  content: "›";
+  grid-row: span 2;
+  /* One line tall, so it turns in place rather than about the two lines. */
+  align-self: start;
+  width: 8px;
+  height: 1.2em;
+  text-align: center;
+  color: var(--dim);
+  font-size: 16px;
+  line-height: 1.2;
+  transition: transform 0.15s;
+}
+
+.method__part[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.method__part summary:hover .method__title {
+  color: var(--me);
+}
+
+.method__title {
+  color: var(--star);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.method__body {
+  padding: 0 0 12px 16px;
+}
+
+.method p {
+  margin: 6px 0;
+}
+
+.method em {
+  color: var(--star);
+  font-style: normal;
+}
+
+.method code {
+  color: var(--star);
+  font-size: 12px;
+}
+
+.method__equation {
+  margin: 10px 0 4px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(244, 184, 96, 0.08);
+  border: 1px solid rgba(244, 184, 96, 0.22);
+  color: var(--star);
+  font: 400 17px/1.4 var(--serif);
+  text-align: center;
+  white-space: nowrap;
+  overflow-x: auto;
+}
+
+.method__sum {
+  color: var(--me);
+  font-size: 1.25em;
+}
+
+/* The hour's worth, in the sun's colour as on its tile. */
+.method__equation--hour em {
+  color: var(--me);
+}
+
+/* A rule in words rather than numbers, which may wrap on a phone. */
+.method__equation--words {
+  font-size: 14px;
+  white-space: normal;
+}
+
+@media (max-width: 420px) {
+  .method__equation {
+    padding: 10px;
+    font-size: 15px;
+  }
+}
+
+.method__equation sup {
+  font-size: 0.7em;
+}
+
+.method__under {
+  margin-top: 2px;
+  font-size: 12px;
+  text-align: center;
+}
+
+/* A part's rules, and its worked examples: a name, then a cell or two. */
+.method__rows {
+  width: 100%;
+  margin: 8px 0;
+  border-collapse: collapse;
+}
+
+.method__rows caption,
+.method__fade caption {
+  padding-bottom: 4px;
+  font-size: 12px;
+  text-align: left;
+}
+
+.method__rows th,
+.method__rows td {
+  padding: 4px 8px 4px 0;
+  border-top: 1px solid var(--faint);
+  vertical-align: baseline;
+  text-align: left;
+}
+
+.method__rows tr:first-child > * {
+  border-top: none;
+}
+
+.method__rows tbody th {
+  width: 1%;
+  color: var(--star);
+  font: italic 400 14px var(--serif);
+  white-space: nowrap;
+}
+
+.method__rows thead th {
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.method__rows strong {
+  color: var(--star);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Only the working wraps, and only on a narrow phone. */
+.method__rows--example th,
+.method__rows--example td:not(:nth-child(3)) {
+  white-space: nowrap;
+}
+
+.method__rows--example {
+  /* Its padding and rule inside its width, so it never runs past the panel. */
+  box-sizing: border-box;
+  padding: 2px 10px;
+  border-left: 2px solid rgba(244, 184, 96, 0.5);
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.method__rows--example th,
+.method__rows--example td {
+  border-top: none;
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+
+.method__rows--example tbody th {
+  color: var(--dim);
+  font: inherit;
+  padding-left: 10px;
+}
+
+.method__rows--example strong {
+  color: var(--me);
+}
+
+/* The Decision history (decisions.ts): one entry per decision, ruled off from the one before. */
+.method__decision + .method__decision {
+  margin-top: 18px;
+  padding-top: 4px;
+  border-top: 1px solid var(--faint);
+}
+
+.method__decision-facts {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 4px 10px;
+  margin: 8px 0;
+  font-size: 13px;
+}
+
+.method__decision-facts dt {
+  color: var(--dim);
+  font-style: italic;
+}
+
+.method__decision-facts dd {
+  margin: 0;
+}
+
+/* Its comparisons have long headings and cells: those wrap rather than run past the panel; a row's name stays on one line. */
+.method__decision .method__rows thead th,
+.method__decision .method__rows td {
+  white-space: normal;
+}
+
+.method__chosen {
+  margin-left: 4px;
+  padding: 0 5px;
+  border: 1px solid rgba(244, 184, 96, 0.5);
+  border-radius: 8px;
+  color: var(--me);
+  font: 400 11px var(--sans);
+  font-style: normal;
+}
+
+/* A heading within a part, where it explains two mechanisms (Messages: direct, then group chats). */
+.method__subhead {
+  margin: 14px 0 0;
+  color: var(--star);
+  font: italic 400 15px/1.3 var(--serif);
+}
+
+/* A rule drawn as a curve (Curve.tsx): the line in the sun's colour, a dashed reference, named points. */
+.method__curve {
+  display: block;
+  width: 100%;
+  max-width: 460px;
+  height: auto;
+  margin: 10px auto 2px;
+  overflow: visible;
+}
+
+.method__curve-grid {
+  stroke: var(--faint);
+}
+
+.method__curve-axis {
+  stroke: rgba(200, 214, 255, 0.24);
+}
+
+.method__curve-tick,
+.method__curve-title {
+  fill: var(--dim);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.method__curve-title {
+  font-size: 11px;
+  letter-spacing: 0.02em;
+}
+
+.method__curve-line {
+  fill: none;
+  stroke: var(--me);
+  stroke-width: 2.2;
+  stroke-linejoin: round;
+}
+
+.method__curve-line--reference {
+  stroke: var(--dim);
+  stroke-width: 1.2;
+  stroke-dasharray: 4 3;
+}
+
+.method__curve-mark circle {
+  fill: var(--me);
+  stroke: #0c1224;
+  stroke-width: 1.5;
+}
+
+.method__curve-mark text {
+  fill: var(--star);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  paint-order: stroke;
+  stroke: #0c1224;
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+
+/* Fading: a message's weight at a few ages, under its curve. */
+.method__fade {
+  margin: 10px 0 6px;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.method__fade th,
+.method__fade td {
+  padding: 2px 24px 2px 0;
+  text-align: left;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.method__fade td:nth-child(2) {
+  color: var(--star);
+}
+
+/* Asking: words to who is shown, step by step. */
+.method__flow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin: 10px 0 4px;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+}
+
+.method__flow li {
+  color: var(--star);
+}
+
+.method__flow li + li::before {
+  content: "→";
+  margin-right: 4px;
+  color: var(--me);
+}
+
+/* What can be asked, under Asking who to show. */
+.method__query {
+  display: grid;
+  gap: 6px;
+  margin: 8px 0;
+}
+
+.method__query dt {
+  color: var(--star);
+}
+
+.method__query dd {
+  margin: 0 0 0 12px;
+  font-size: 12px;
+}
+
+.method__settings {
+  margin: 8px 0 4px;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.method__default {
+  color: rgba(141, 151, 173, 0.7);
+}
+
+.method__settings th,
+.method__settings td {
+  padding: 3px 12px 3px 0;
+  vertical-align: baseline;
+  text-align: left;
+  font-weight: 400;
+}
+
+.method__note {
+  font-size: 12px;
+  color: rgba(141, 151, 173, 0.85);
+}
+
+/* Hide by tag (HidePanel.tsx): the button at the end of the Query bar, and its panel; the Table's tag manager and Changes use the panel too. */
+
+.tag-filter {
+  position: relative;
+}
+
+/* Hide's button: an icon alone, square. */
+.tag-filter__button {
+  width: var(--control-h, 32px);
+  justify-content: center;
+  padding: 0;
+}
+
+.tag-filter__panel {
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + 6px);
+  right: 0;
+  width: 240px;
+  box-sizing: border-box;
+  padding: 8px;
+  border-radius: 12px;
+  background: #0c1224;
+  border: 1px solid rgba(200, 214, 255, 0.16);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+  color: var(--dim);
+  font-size: 13px;
+  white-space: normal;
+}
+
+.tag-filter__panel ul {
+  max-height: min(360px, 60cqh);
+  overflow-y: auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tag-filter__panel label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 6px;
+  border-radius: 6px;
+  color: var(--star);
+  cursor: pointer;
+}
+
+.tag-filter__panel label:hover {
+  background: rgba(141, 151, 173, 0.12);
+}
+
+.tag-filter__panel input {
+  margin: 0;
+  accent-color: var(--me);
+}
+
+.tag-filter__tag {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tag-filter__off .tag-filter__tag {
+  color: var(--dim);
+  text-decoration: line-through;
+}
+
+.tag-filter__count {
+  color: var(--dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.tag-filter__all {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 6px;
+  border: 0;
+  border-top: 1px solid var(--faint);
+  border-radius: 0 0 6px 6px;
+  background: none;
+  color: var(--me);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.tag-filter__all:hover {
+  background: rgba(141, 151, 173, 0.12);
+}
+
+/* The Query bar (QueryBar.tsx): a row of its own under the header's first, on
+   Orbits and the Table, its one box and Hide at the right. The box is edged in your
+   colour while a query is on. It grows down over the page, not the
+   header, while typed in, and the line under it floats over the page
+   too, as wide as it needs, moving down as the box grows. */
+
+.query-bar {
+  position: relative;
+  flex-basis: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: var(--dim);
+  font-size: 13px;
+}
+
+/* The box is at least 200 px wide, its buttons included, and holds one line in the bar; it grows wider with its
+   longest line (--box-chars, set by QueryBar.tsx), into the bar's free width and no further, so a narrow window
+   wraps the bar, and grows down over what is under it, to show all it holds, while typed in. */
+.query-bar__box {
+  position: relative;
+  flex: 1 1 200px;
+  max-width: max(200px, calc(var(--box-chars, 0) * 1ch + 1ch + 76px));
+  height: var(--control-h, 32px);
+  font: 13px/1.4 var(--sans);
+}
+
+/* The box, with the line under it, over the page, so the line moves down as the box grows. */
+.query-bar__stack {
+  position: absolute;
+  z-index: 6;
+  top: 0;
+  left: 0;
+  right: 0;
+}
+
+/* The box being typed in grows over what is under it. */
+.query-bar__stack:focus-within {
+  z-index: 7;
+}
+
+.query-bar__transcript {
+  box-sizing: border-box;
+  width: 100%;
+  height: var(--control-h, 32px);
+  padding: 6px 64px 6px 10px;
+  border: 1px solid rgba(141, 151, 173, 0.28);
+  border-radius: 8px;
+  background: rgba(7, 11, 22, 0.86);
+  color: var(--star);
+  resize: none;
+  /* Clipped at the padding's inner edge, so a box of several lines shows only its first. */
+  overflow: clip;
+  overflow-clip-margin: content-box;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  backdrop-filter: blur(6px);
+}
+
+.query-bar__transcript {
+  font: 13px/1.4 var(--sans);
+}
+
+/* An empty box holds only its go button, so its placeholder has room up to it. */
+.query-bar__transcript:placeholder-shown {
+  padding-right: 32px;
+}
+
+.query-bar__transcript::placeholder {
+  color: var(--dim);
+  opacity: 0.7;
+}
+
+.query-bar__transcript--on {
+  border-color: rgba(244, 184, 96, 0.6);
+}
+
+.query-bar__transcript:focus {
+  height: auto;
+  min-height: var(--control-h, 32px);
+  max-height: 15.5em;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  field-sizing: content;
+  outline: none;
+  border-color: rgba(232, 238, 252, 0.7);
+}
+
+/* A query that did not run, or that the map refused as too many (query-bar--failed): the box, its go
+   button and Hide turn red until the words or Hide change. */
+.query-bar--failed .query-bar__transcript,
+.query-bar--failed .query-bar__transcript:focus {
+  border-color: rgba(255, 120, 100, 0.85);
+}
+
+.query-bar--failed .query-bar__go:not(:disabled) {
+  background: #ff7a66;
+}
+
+.query-bar--failed .tag-filter > .demos__method {
+  border-color: rgba(255, 120, 100, 0.85);
+  color: #ffb3a7;
+}
+
+/* Hide's panel opens over the line under the box. */
+.query-bar .tag-filter__panel {
+  z-index: 7;
+}
+
+/* The static demo's example transcripts (ExamplePicker in QueryBar.tsx): listed under the Query bar's box, each with the query it becomes. */
+.query-bar__examples-panel {
+  width: min(340px, calc(100vw - 32px));
+}
+
+.query-bar__examples-note {
+  margin: 2px 6px 8px;
+  color: var(--dim);
+}
+
+.query-bar__examples-panel li button {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  padding: 6px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--star);
+  font: 13px/1.35 var(--sans);
+  text-align: left;
+  cursor: pointer;
+}
+
+.query-bar__examples-panel li button:hover,
+.query-bar__examples-panel li button:focus-visible {
+  background: rgba(141, 151, 173, 0.12);
+  outline: none;
+}
+
+.query-bar__examples-panel code {
+  color: var(--dim);
+  font: 12px/1.3 ui-monospace, SFMono-Regular, Menlo, monospace;
+  white-space: pre-wrap;
+}
+
+/* A box's × and go buttons, inside it at its right edge, at the foot of the box as it grows. */
+.query-bar__field {
+  position: relative;
+  display: flex;
+}
+
+.query-bar__buttons {
+  position: absolute;
+  right: 1px;
+  bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  /* A one-line box's text runs on past its padding; it fades out under the buttons rather than showing through. */
+  padding: 0 3px 0 10px;
+  border-radius: 0 7px 7px 0;
+  background: linear-gradient(to right, transparent, rgb(7, 11, 22) 10px);
+}
+
+.query-bar__clear,
+.query-bar__go {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--dim);
+  cursor: pointer;
+}
+
+.query-bar__clear:hover {
+  color: var(--star);
+  background: rgba(141, 151, 173, 0.14);
+}
+
+.query-bar__go {
+  color: var(--night);
+  background: var(--me);
+}
+
+.query-bar__go:hover:not(:disabled) {
+  filter: brightness(1.12);
+}
+
+.query-bar__go:disabled {
+  color: var(--dim);
+  background: rgba(141, 151, 173, 0.14);
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* Generate waiting on the model. */
+.query-bar__go--busy:disabled {
+  opacity: 1;
+  animation: query-bar-busy 1s ease-in-out infinite alternate;
+}
+
+@keyframes query-bar-busy {
+  to {
+    background: rgba(244, 184, 96, 0.5);
+  }
+}
+
+.query-bar__status {
+  /* Under the box, ending at its right edge, as wide as it needs (it wraps only past this). */
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  width: max-content;
+  max-width: min(520px, calc(100vw - 44px));
+  margin: 0;
+  color: var(--star);
+  font-size: 12.5px;
+  line-height: 1.45;
+  white-space: normal;
+  text-shadow: 0 1px 6px var(--night), 0 0 2px var(--night);
+}
+
+.query-bar__status--error {
+  color: #ff9a8a;
+}
+
+/* The aspiring friend's form (AddAspiring.tsx): a label over each box. */
+.add-person__form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tag-filter__panel .add-person__form label {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+  padding: 0 2px;
+  cursor: default;
+}
+
+.tag-filter__panel .add-person__form label:hover {
+  background: none;
+}
+
+/* Add an aspiring friend, folded in the menu at the top left. */
+.add-aspiring {
+  padding: 4px 2px 0;
+}
+
+.add-aspiring label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.add-person__form label span {
+  color: var(--dim);
+  font-size: 11px;
+}
+
+.add-person__form input,
+.add-person__form textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 4px 6px;
+  border: 1px solid rgba(200, 214, 255, 0.28);
+  border-radius: 6px;
+  background: rgba(7, 11, 22, 0.8);
+  color: var(--star);
+  font: inherit;
+  resize: vertical;
+}
+
+.add-person__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.add-person__add:not(:disabled) {
+  border-color: var(--me);
+}
+
+.add-person__same {
+  margin: 2px 0 0;
+}
+
+/* The header's panels open over the Query bar's boxes (z-index 6), which sit just under them. */
+.changes-panel {
+  z-index: 7;
+}
+
+/* A question asked in a panel (Changes' Undo, the aspiring friend's same name), and its buttons. */
+.tag-manager__confirm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 2px 6px 6px;
+  padding: 8px;
+  border-radius: 8px;
+  background: rgba(141, 151, 173, 0.1);
+}
+
+.tag-manager__confirm p {
+  flex-basis: 100%;
+  margin: 0 0 2px;
+  color: var(--star);
+  line-height: 1.4;
+}
+
+.tag-manager__button {
+  padding: 3px 10px;
+  border: 1px solid rgba(141, 151, 173, 0.28);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--star);
+  font: inherit;
+  cursor: pointer;
+}
+
+.tag-manager__button:hover:not(:disabled) {
+  background: rgba(141, 151, 173, 0.16);
+}
+
+.tag-manager__button:disabled {
+  color: var(--dim);
+  cursor: default;
+}
+
+.tag-manager__button--danger {
+  border-color: rgba(244, 112, 96, 0.5);
+  color: #ffb4a8;
+}
+
+/* The change log (ChangesPanel.tsx), in the live map views' header, in a panel like Hide's. */
+.changes-panel {
+  width: 400px;
+  max-width: calc(100cqw - 44px);
+}
+
+.changes-panel__list {
+  max-height: min(520px, 70cqh);
+  overflow-y: auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.changes-panel__item {
+  padding: 8px 6px;
+  border-bottom: 1px solid var(--faint);
+}
+
+.changes-panel__item:last-child {
+  border-bottom: 0;
+}
+
+.changes-panel__item--undone .changes-panel__action {
+  color: var(--dim);
+  text-decoration: line-through;
+}
+
+.changes-panel__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.changes-panel__action {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--star);
+}
+
+.changes-panel__meta,
+.changes-panel__other,
+.changes-panel__status {
+  font-size: 12px;
+}
+
+.changes-panel__status {
+  margin: 4px 6px;
+  line-height: 1.4;
+}
+
+.changes-panel__words {
+  display: block;
+  margin: 4px 0 0;
+  color: var(--star);
+  font-style: italic;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.changes-panel__people {
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+.changes-panel__person,
+.changes-panel__toggle {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--me);
+  font: inherit;
+  cursor: pointer;
+}
+
+.changes-panel__person:hover,
+.changes-panel__toggle:hover {
+  text-decoration: underline;
+}
+
+.changes-panel__toggle {
+  margin-top: 4px;
+  font-size: 12px;
+}
+
+.changes-panel__details {
+  margin: 4px 0 0;
+  padding: 0 0 0 10px;
+  list-style: none;
+  border-left: 2px solid var(--faint);
+}
+
+.changes-panel__details li + li {
+  margin-top: 4px;
+}
+
+.changes-panel__line {
+  font-size: 12px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.changes-panel__item .tag-manager__confirm {
+  margin: 6px 0 0;
+}
+
+/* A view's own switch, after the tags (the Table's "Archived by the rules"). */
+
+/* A phone, upright or on its side (or a window this narrow): the panel takes
+   the whole screen, over the map rather than beside it, which keeps its size
+   underneath; the frozen views' floating panel does the same. */
+@media (max-width: 560px), (max-height: 500px) and (pointer: coarse) {
+  .demos {
+    --dock: 100vw;
+  }
+
+  .demos--docked .demos__map,
+  .demos--docked .demos__room {
+    right: 0;
+  }
+
+  .demos--keeps-size.demos--docked .demos__stage {
+    transform: none;
+  }
+
+  /* The map is the window's size here, so it need not be a size container,
+     which would hold the archived chip and the error notice (fixed, in it)
+     under the panel. Its container queries' header spacing, as it is at this
+     width: */
+  .demos__map {
+    container-type: normal;
+  }
+
+  .demos__header {
+    column-gap: 14px;
+  }
+
+  .demos__header > .view-switcher {
+    min-width: 0;
+  }
+
+  .demos__controls {
+    column-gap: 10px;
+  }
+
+  /* Over the header's panels and the Query bar's boxes (z-index 7 at most). */
+  .demos__dock {
+    z-index: 8;
+  }
+
+  .demos__drawer.side-panel {
+    z-index: 8;
+    inset: 0;
+    width: auto;
+    border-radius: 0;
+  }
+
+  /* The panel covers the whole screen, so the demo's note is centred on it. */
+  .demos--drawer .demo-mode {
+    left: 50%;
+  }
+
+  /* Methodology as a sheet over the whole screen, its title and × held at the top while it scrolls. */
+  .method {
+    position: fixed;
+    z-index: 8;
+    inset: 0;
+    width: auto;
+    max-height: none;
+    padding: 0 16px calc(20px + env(safe-area-inset-bottom));
+    border: none;
+    border-radius: 0;
+  }
+
+  /* The examples' results wrap rather than run past the screen. */
+  .method .method__rows--example td {
+    white-space: normal;
+  }
+
+  .method__header {
+    position: sticky;
+    z-index: 1;
+    top: 0;
+    padding: 14px 0 8px;
+    background: #0c1224;
+  }
+}
+
+/* A phone upright (or a window this narrow). */
+@media (max-width: 560px) {
+  /* The header in three rows rather than four: the title with People (where
+     there is People) at its right; the find box with Methodology (its icon only), or
+     the Table's Tags and Changes; then the Query bar. The crumb above the
+     title goes. */
+  .demos__header {
+    padding: 10px 16px 0;
+    column-gap: 8px;
+  }
+
+  /* Room above the title for the demo's note (demoMode.css): the map here is
+     as wide as fits, so the header's height costs it nothing. */
+  .demos__map:has(> .demo-mode) .demos__header {
+    padding-top: 22px;
+  }
+
+  .view-switcher__crumb,
+  .demos__controls > span,
+  .demos__line {
+    display: none;
+  }
+
+  .demos__header > .view-switcher {
+    order: -3;
+    min-width: 0;
+  }
+
+  .demos__controls {
+    display: contents;
+  }
+
+  .demos__controls > .demos__people {
+    order: -2;
+    margin-left: auto;
+  }
+
+  /* Ends the first row. */
+  .demos__header:has(.demos__find)::before {
+    content: "";
+    order: -1;
+    flex-basis: 100%;
+    margin-bottom: -8px;
+  }
+
+  .demos__controls > .find-box,
+  .demos__controls > .demos__find {
+    flex: 1 1 120px;
+  }
+
+  .demos__controls > .find-box .demos__find {
+    box-sizing: border-box;
+    width: 100%;
+  }
+
+  .demos__controls > .demos__method:has(svg) {
+    gap: 0;
+    font-size: 0;
+  }
+
+  .demos__controls > .demos__method:has(svg) svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  /* The Query bar's box takes the row beside Hide, however short what it holds,
+     and the line under it starts at its left edge, so it stays on the screen. */
+  .query-bar__box {
+    max-width: none;
+  }
+
+  .query-bar__status {
+    left: 0;
+    right: auto;
+    max-width: calc(100vw - 32px);
+  }
+}
+
+/* A touch screen. Fields at 16 px, below which an iPhone zooms the page in on
+   focus (and leaves it zoomed), and the header's controls, the Query bar's
+   buttons and the map's zoom buttons big enough for a finger. */
+@media (pointer: coarse) {
+  .demos__find,
+  .view-switcher__circle input,
+  .query-bar__transcript,
+  .tag-manager__rename input,
+  .tag-manager__add input,
+  .add-person__form input,
+  .add-person__form textarea {
+    font-size: 16px;
+  }
+
+  .demos__header {
+    --control-h: 38px;
+  }
+
+  .demos__people {
+    min-height: 36px;
+  }
+
+  .query-bar__transcript {
+    line-height: 1.5;
+    padding-top: 7px;
+    padding-bottom: 7px;
+  }
+
+  .query-bar__transcript {
+    padding-right: 80px;
+  }
+
+  .query-bar__transcript:placeholder-shown {
+    padding-right: 46px;
+  }
+
+  .query-bar__buttons {
+    bottom: 3px;
+  }
+
+  .query-bar__clear,
+  .query-bar__go {
+    width: 32px;
+    height: 32px;
+  }
+
+  .tag-filter__panel label {
+    min-height: 36px;
+  }
+
+  .find-box__option {
+    min-height: 40px;
+  }
+}

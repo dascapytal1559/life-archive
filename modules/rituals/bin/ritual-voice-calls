@@ -1,0 +1,11 @@
+#!/bin/sh
+# Moved: the voice-calls job is the journal module's Grok calls job now (modules/journal/jobs/grok-calls/, `npm run
+# journal -- grok-calls`). This wrapper stays, for now, because the launchd agent rituals installed
+# (local.life-archive-voice-calls) runs it by this path: it hands its run, arguments and all, to the journal's command,
+# on the same Node it always chose (bin/node.sh), so that agent goes on as it was. `npm run journal -- grok-calls
+# install` writes the agent anew with the journal's own program; once it has, nothing runs this, and it goes.
+set -eu
+umask 077
+RITUAL_HOME=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+. "$RITUAL_HOME/bin/node.sh"
+exec "$RITUAL_NODE" --no-warnings "$RITUAL_HOME/../journal/cli.ts" grok-calls "$@"

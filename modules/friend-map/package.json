@@ -1,0 +1,9 @@
+{
+  "name": "life-archive-friend-map",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "The life archive's friend map module: the people, their chats, calls and hangouts, the importers and jobs that bring them, and friend-map's page over them.",
+  "lifeArchive": true,
+  "lifeArchiveReady": true
+}

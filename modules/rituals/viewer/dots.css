@@ -1,0 +1,239 @@
+/* Rituals' rows of dots (DotRows.tsx, Fitness's weekly targets) and what both tabs share (HabitViews.tsx's messages,
+   the tooltip, the legend; Daily rituals' run has its own sheet, run.css), in the console's tokens (console.css's
+   --c-*), so they read the same by day and at night. A row: its name and its count held at the left, then a dot a
+   slot, an axis above naming the months. Colour only where it
+   means something: done is the console's green (--c-in), not done its red (--c-out), still going a hollow ring. The
+   strip scrolls sideways under the held names when it is wider than the card. */
+
+.hd {
+  display: grid;
+  gap: 16px;
+}
+
+.hd__message,
+.hd__none {
+  margin: 0;
+  color: var(--c-muted);
+  font-size: 13px;
+}
+
+.hd__warn {
+  margin: 0;
+  color: var(--c-mild);
+  font-size: 13px;
+}
+
+.dots {
+  --dots-slot: 12px;
+  --dots-head: 240px;
+  position: relative;
+}
+
+/* A week a slot: fewer of them, so a little more room each, and for the months' names over them. */
+.dots--week {
+  --dots-slot: 22px;
+}
+
+.dots__scroll {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  padding-bottom: 4px;
+}
+
+.dots__row {
+  display: flex;
+  align-items: center;
+  width: max-content;
+  min-width: 100%;
+  min-height: 26px;
+}
+
+.dots__row + .dots__row:not(.dots__row--axis) {
+  border-top: 1px solid var(--c-line);
+}
+
+/* The name and count, held at the left while the strip scrolls. */
+.dots__head {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  flex: none;
+  width: var(--dots-head);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px 4px 0;
+  background: var(--c-surface);
+}
+
+/* A long name (a temporary check is the captain's own words) takes two lines, then is cut; its whole is the tooltip. */
+.dots__name {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.3;
+  color: var(--c-text);
+}
+
+.dots__label {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.dots__note {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--c-mono);
+  font-size: 11px;
+  color: var(--c-faint);
+}
+
+.dots__count {
+  flex: none;
+  font-family: var(--c-mono);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--c-muted);
+}
+
+.dots__strip {
+  display: flex;
+  align-items: center;
+  padding-right: 2px;
+}
+
+.dots__slot {
+  position: relative;
+  flex: none;
+  width: var(--dots-slot);
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* The axis: the first week of each month, its month named above its dots. */
+.dots__row--axis {
+  min-height: 18px;
+  align-items: flex-end;
+}
+
+/* The axis's own corner covers the months' names as they scroll under it. */
+.dots__row--axis .dots__head {
+  align-self: stretch;
+}
+
+.dots__row--axis .dots__slot {
+  height: 16px;
+  justify-content: flex-start;
+}
+
+.dots__tick {
+  position: absolute;
+  left: 2px;
+  bottom: 2px;
+  font-family: var(--c-mono);
+  font-size: 10px;
+  font-style: normal;
+  color: var(--c-faint);
+  white-space: nowrap;
+}
+
+/* A dot: small, round, its colour its meaning. */
+.dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  transition: transform 100ms ease;
+}
+
+.dot--done {
+  background: var(--c-in);
+}
+
+.dot--not-done,
+.dot--late,
+.dot--overdue {
+  background: var(--c-out);
+}
+
+.dot--untimed {
+  background: var(--c-muted);
+}
+
+.dot--open {
+  box-sizing: border-box;
+  border: 1.5px solid var(--c-muted);
+}
+
+.dots__scroll .dot {
+  cursor: default;
+}
+
+.dot--pointed {
+  transform: scale(1.5);
+}
+
+/* The pointed dot's date and words, above it, on one line unless the block is narrower. */
+.dots__tip {
+  position: absolute;
+  z-index: 3;
+  width: max-content;
+  max-width: 100%;
+  box-sizing: border-box;
+  transform: translate(-50%, calc(-100% - 6px));
+  padding: 4px 8px;
+  border: 1px solid var(--c-line);
+  border-radius: 6px;
+  background: var(--c-surface);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  font-family: var(--c-mono);
+  font-size: 11px;
+  color: var(--c-text);
+  pointer-events: none;
+}
+
+.dots__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin: 10px 0 0;
+  font-size: 11px;
+  color: var(--c-faint);
+}
+
+.dots__legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* A phone (the console's breakpoint): a narrower name column, the strip scrolling under it. */
+@media (max-width: 899px) {
+  .dots {
+    --dots-head: 132px;
+  }
+
+  /* The card's name whole, when it was updated on a line of its own under it. */
+  .hd .card__head {
+    flex-wrap: wrap;
+    row-gap: 2px;
+  }
+
+  .hd .card__head h3 {
+    flex: 1 0 auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dot {
+    transition: none;
+  }
+}

@@ -1,0 +1,158 @@
+/* The Fitness page's Bryan Johnson tab (Pillars.tsx): the five stones' picture as a banner, then five cards in the zone
+   2 card's frame (exercise.css's .z2), each this week's value beside a bar chart of its weeks (WeekChart.tsx), the bars
+   in the pillar's own colour: gym green, zone 2 blue, zones 4 and 5 red, as the rest of the page colours them. */
+
+/* The banner: framed as the cards are (their 14px corners, the console's hairline), with nothing else around it. On a
+   phone it is the whole picture; wider, a band through the carvings, top of the tallest stone to the stones' feet, so
+   it never pushes the charts far down. The picture is a night sky by day too, so a faint inner light line keeps its
+   edge crisp against the console's true black at night. */
+.pl-stones {
+  position: relative;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--c-line);
+  border-radius: 14px;
+  background: #0b0f1a;
+}
+
+.pl-stones::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06);
+  pointer-events: none;
+}
+
+.pl-stones img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1440 / 816;
+  object-fit: cover;
+}
+
+@media (min-width: 561px) {
+  .pl-stones img {
+    aspect-ratio: 1440 / 620;
+    max-height: 460px;
+    object-position: 50% 45%;
+  }
+}
+.pl-card[data-pillar="lift"] { --pl: var(--c-accent); }
+.pl-card[data-pillar="z2"] { --pl: var(--c-blue); }
+.pl-card[data-pillar="hiit"] { --pl: var(--c-out); }
+.pl-card[data-pillar="mob"] { --pl: var(--c-treated); }
+.pl-card[data-pillar="bal"] { --pl: var(--c-mild); }
+
+.pl-head__credit {
+  margin: 0;
+  font-size: 13px;
+  color: var(--c-muted);
+}
+
+.pl-head__credit a {
+  color: inherit;
+}
+
+.z2.pl-card {
+  grid-template-columns: minmax(200px, 1fr) minmax(0, 3fr);
+}
+
+.pl-card__name {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--c-text);
+}
+
+.pl-card .z2__value {
+  color: var(--pl);
+}
+
+.pl-card__when {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--c-faint);
+}
+
+/* The weeks: as wide as the card, a week's column at most 44px, this week at the left edge (WeekChart's newestFirst) so
+   the five charts' weeks line up; a history longer than the card holds at 6px a week (--weeks) scrolls, and opens at
+   its start, this week. */
+/* It reaches into the card's padding at its left, so this month's label, drawn leftwards from its first week and
+   wider than a narrow week, is not cut off there. */
+.pl-card__scroll {
+  min-width: 0;
+  margin-left: -16px;
+  padding-left: 16px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+/* Newest first, a month's label is drawn from its first week leftwards, over the month's newer weeks. */
+.pl-card__scroll .wk--newest-first .wk__axis span {
+  direction: rtl;
+  text-align: right;
+}
+
+/* The heading (and the week pointed at) stays in view while the weeks scroll under it. */
+.pl-card__scroll .wk__head {
+  position: sticky;
+  left: 0;
+  justify-self: start;
+  max-width: 80vw;
+}
+
+.pl-card__scroll .z2__weeks {
+  min-width: calc(var(--weeks, 1) * 6px);
+}
+
+.pl-card__scroll .wk__chart,
+.pl-card__scroll .wk__axis {
+  gap: clamp(1px, calc(160px / var(--weeks, 1)), 5px);
+}
+
+.pl-card__scroll .wk__col,
+.pl-card__scroll .wk__axis span {
+  max-width: 44px;
+}
+
+.pl__chart {
+  height: 110px;
+}
+
+.pl__chart .pl__bar {
+  display: block;
+  width: 100%;
+  border-radius: 3px 3px 0 0;
+  background: var(--pl);
+  opacity: 0.32;
+}
+
+.pl__chart .pl__bar--met {
+  opacity: 0.7;
+}
+
+/* This week, still in progress: hatched in the pillar's colour, at full strength. */
+.pl__chart .pl__bar--now {
+  opacity: 1;
+  background: repeating-linear-gradient(-45deg, var(--pl) 0 2px, color-mix(in srgb, var(--pl) 40%, transparent) 2px 5px);
+  box-shadow: inset 0 0 0 1px var(--pl);
+}
+
+.pl__empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 0 12px;
+  font-size: 12px;
+  color: var(--c-faint);
+  text-align: center;
+}
+
+@media (max-width: 560px) {
+  .z2.pl-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

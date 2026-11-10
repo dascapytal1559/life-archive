@@ -1,0 +1,9 @@
+{
+  "name": "life-archive-health",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "The life archive's health module: every result judged by one authority on range, the records that are no result, and the physical assessment.",
+  "lifeArchive": true,
+  "lifeArchiveReady": false
+}

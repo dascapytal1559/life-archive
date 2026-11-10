@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- The icon: the Spider web's spider at rest, seen from above (src/icon/). The SVG wherever a browser takes one, black on a light tab strip and white on a dark one; elsewhere a PNG of it on a white plate, and the home screen's on a phone. -->
+    <link rel="icon" href="/src/icon/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/src/icon/favicon-32.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/src/icon/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="Friend map" />
+    <meta name="theme-color" content="#030812" />
+    <title>Friend map</title>
+    <!-- friend-map is dark only, and says so from its first paint, before any script or stylesheet has loaded (they take
+         a moment under Vite): a page with no colour scheme is drawn light, white until the app draws, and in a frame
+         whose page is dark (the life archive's console at night) the browser paints the frame an opaque white. Dark,
+         the page never opens white: in a dark frame the frame stays clear over the embedder's own ground, and alone or
+         in a light frame the browser paints its dark ground until the app draws. -->
+    <meta name="color-scheme" content="dark" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,22 @@
+// The module's lines of the privacy policy (sdk/server.ts's ModulePrivacy; the core's server/privacy/policy.ts): what
+// of its data is content, what holds that to the rule, and what is metadata. `npm run docs` writes them into
+// docs/privacy.md with the core's, and the guard's review is told them.
+
+import type { ModulePrivacy } from "../../../sdk/server.ts";
+
+export const RITUALS_PRIVACY: ModulePrivacy = {
+  content: [
+    "rituals' store (`modules/rituals/data/ritual.sqlite3` in the archive's folder, which `bin/ritualctl` writes and the archive's server reads in-process, read-only, for Events' Daily rituals and Fitness's Habits): the captain's own words in it (each report's `source_text`, a day's `notes`, a workout's title and details, a weekly target's name and an entry's note, a temporary item's words), its audit of every change and the source documents it was imported from; and every copy that holds them: rituals' own backups beside it (`data/backups/`, one before each write), its exports (`data/exports/`), the dashboard snapshots it still writes (`data/views/`) and its offline queue (`modules/rituals/queue/`, whose pending entries hold a request whole, his words included), and the copies the rituals connector kept of each day's workouts before the module (`platform-exports/rituals/workouts/`), read by nothing now, until they are removed",
+    "rituals' private notes in the archive's folder, `modules/rituals/LOCAL.md` and everything under `modules/rituals/history/` (what the rituals repository kept beside its code, the repository's bundle among them)",
+  ],
+  contentGuards: [
+    "rituals' two tabs (Events' Daily rituals, Fitness's Habits) are sent only what rituals' own dashboard served (`/life-archive/api/m/rituals/dashboard`, `modules/rituals/server/dashboard.ts`): each day's workouts with his words about them, which neither tab shows, but no weekly target's notes, no one who logged an entry and no habit times; and, beyond what that dashboard served, the temporary items on the rituals (the captain's own words for each) with their marks day by day and the time of each tick, but no check's id, revision, source text or audit; no tab reads rituals' whole view (`/life-archive/api/m/rituals`) since the Rituals page's Previous tab went; and Fitness's Activities reads of a workout he logged there only its category, title, his words about it (shown to him alone), how long they say it was and whether they say zone 2",
+    "the calendar's rituals rows (`modules/rituals/server/calendar.ts`) carry no words: a habit done is its habit, its time and how the time is known, and a day which habits and required checks were done, not done or not reported yet, in rituals' own words for the habits and a check's id (never its words), with a plank's held time",
+    "the assistants that log through `bin/ritualctl` read the store through its read requests (`rituals`, `history`, `ritual_status`, `export` and the rest `modules/rituals/HANDOFF.md` lists) and through `bin/ritual-view`, without the archive's trail, as rituals' own contract has it: this grants no new reader and no new read; the store's audit records every write, and the archive's content commands (`timeline`, `search`, `event-content`) never reach it",
+    "at the archive's MCP door (`server/agents.ts`), the same requests go through `bin/ritualctl` too: `rituals_status` answers a day's statuses alone (no check's words, no notes, no source text) to every key; `rituals_read`, any read request answered whole, only to a key granted `content:rituals`, each read kept in the archive's trail with the agent and the captain's words; and `rituals_write` only to a key granted `write:rituals`",
+    "nothing in the archive reads rituals' notes in `modules/rituals/LOCAL.md` and `history/`",
+  ],
+  metadata: [
+    "when the captain checked in each evening and did each habit, how each time is known, how each day's habits and required checks stood (a check by its id) and a plank's held time; a workout's category from Rituals (gym push, bike) and the minutes its words state; the archive's old rows of them from before the module (`ritual_checkin`, `ritual_habit`, `ritual_day` and `ritual_workouts` events, and the rituals connector's runs), read by nothing, until `npm run archive -- migrate friend-map-module --apply` (the friend map step's move, which drops them too) overwrites them for good",
+  ],
+};

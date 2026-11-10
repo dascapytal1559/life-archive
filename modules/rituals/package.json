@@ -1,0 +1,9 @@
+{
+  "name": "life-archive-rituals",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "The life archive's rituals module: the captain's daily rituals and weekly targets, logged by his assistant through bin/ritualctl into rituals' own store, shown on Events' Daily rituals, Fitness's Habits and as rows of the calendar; rituals' own code, brought in from its repository.",
+  "lifeArchive": true,
+  "lifeArchiveReady": false
+}

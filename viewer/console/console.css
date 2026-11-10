@@ -1,0 +1,1301 @@
+/* The console (Console.tsx): P3 "Console" of the October 2026 worlds round, premium white by day and true black at
+   night, in the device's own faces (SF Pro and SF Mono on a Mac and an iPhone; Inter and a mono face elsewhere), with
+   one signal-green accent. Its tokens are --c-*; the rest of the sheet is the shell (rail, surface),
+   the blocks (blocks.tsx), Jump to (Jump.tsx), how the blocks reflow on a phone (the shell's phone layout is
+   phone.css's), and at the end the bridge that re-colours the old
+   viewer's Health view (viewer.css's tokens and the few colours it writes outright) to the console's look. */
+
+.console {
+  --c-page: #ffffff;
+  --c-rail: #fafafa;
+  --c-surface: #ffffff;
+  --c-surface-2: #f6f6f6;
+  --c-text: #0f0f0f;
+  --c-muted: #6b6b6b;
+  --c-faint: #a3a3a3;
+  --c-line: rgba(15, 15, 15, 0.08);
+  --c-line-2: rgba(15, 15, 15, 0.14);
+  --c-accent: #15803d;
+  --c-accent-soft: rgba(21, 128, 61, 0.1);
+  --c-accent-line: rgba(21, 128, 61, 0.35);
+  --c-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --c-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --c-mono: ui-monospace, "SF Mono", "Geist Mono", Menlo, Consolas, monospace;
+  --c-out: #dc2626;
+  --c-mild: #b45309;
+  --c-in: #15803d;
+  --c-treated: #6d28d9;
+  --c-unjudged: #6b6b6b;
+  --c-out-soft: rgba(220, 38, 38, 0.1);
+  --c-mild-soft: rgba(180, 83, 9, 0.12);
+  --c-in-soft: rgba(21, 128, 61, 0.1);
+  --c-treated-soft: rgba(109, 40, 217, 0.1);
+  --c-blue: #2563eb;
+  color-scheme: light;
+
+  position: fixed;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 256px minmax(0, 1fr);
+  background: var(--c-page);
+  color: var(--c-text);
+  font: 400 14px/1.5 var(--c-sans);
+  letter-spacing: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "cv11", "ss01";
+  font-variant-numeric: tabular-nums;
+}
+
+.console--dark {
+  --c-page: #000000;
+  --c-rail: #0a0a0a;
+  --c-surface: #0f0f0f;
+  --c-surface-2: #161616;
+  --c-text: #f5f5f5;
+  --c-muted: #9a9a9a;
+  --c-faint: #5c5c5c;
+  --c-line: rgba(255, 255, 255, 0.09);
+  --c-line-2: rgba(255, 255, 255, 0.16);
+  --c-accent: #4ade80;
+  --c-accent-soft: rgba(74, 222, 128, 0.12);
+  --c-accent-line: rgba(74, 222, 128, 0.4);
+  --c-shadow: none;
+  --c-out: #f87171;
+  --c-mild: #fbbf24;
+  --c-in: #4ade80;
+  --c-treated: #a78bfa;
+  --c-unjudged: #9a9a9a;
+  --c-out-soft: rgba(248, 113, 113, 0.14);
+  --c-mild-soft: rgba(251, 191, 36, 0.14);
+  --c-in-soft: rgba(74, 222, 128, 0.12);
+  --c-treated-soft: rgba(167, 139, 250, 0.14);
+  --c-blue: #60a5fa;
+  color-scheme: dark;
+}
+
+.console *,
+.console *::before,
+.console *::after {
+  box-sizing: border-box;
+}
+
+/* The shell's resets; inside a view's surface a wrapped page's own buttons and links (viewer.css's) keep their look. */
+.console button:where(:not(.console__view *)) {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.console a:where(:not(.console__view *)) {
+  color: inherit;
+}
+
+.console :focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.console .icon {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex: none;
+  display: block;
+}
+
+.console kbd {
+  font-family: var(--c-mono);
+  font-size: 10px;
+  color: var(--c-faint);
+  border: 1px solid var(--c-line);
+  border-radius: 5px;
+  padding: 2px 5px;
+}
+
+/* The rail: the brand, Overview, the aspects (the current one's views under it), and Jump to and the settings gear at the foot. */
+.console__rail {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: calc(20px + env(safe-area-inset-top)) 14px 20px calc(14px + env(safe-area-inset-left));
+  background: var(--c-rail);
+  border-right: 1px solid var(--c-line);
+  overflow-y: auto;
+  min-height: 0;
+  position: relative;
+}
+
+.console__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px 18px;
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: -0.01em;
+}
+
+/* The life archive's mark, at the head of the rail and at the left of the phone's bar. */
+.console__mark {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  background: var(--c-text);
+  position: relative;
+  flex: none;
+}
+
+.console__mark::after {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border-radius: 2px;
+  background: var(--c-rail);
+}
+
+.console__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 10px;
+  color: var(--c-muted);
+  font-weight: 500;
+  text-decoration: none;
+  transition: background 0.15s ease, color 0.15s ease;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
+}
+
+.console__item:hover {
+  background: var(--c-surface-2);
+  color: var(--c-text);
+}
+
+.console__item.is-current {
+  background: var(--c-accent-soft);
+  color: var(--c-text);
+}
+
+.console__item.is-current .icon {
+  color: var(--c-accent);
+}
+
+.console__item-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The rail's order (reorder.ts): each aspect is a block, which a drag lifts onto the pointer as a card
+   while the others slide aside over the slot it would land in. A grip shows on hovering an aspect, the hint that it
+   moves; "Default", beside the rail's label once the order is his own, puts the console's back. On a desk alone. */
+.console__aspect {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: relative;
+  z-index: 1;
+  border-radius: 10px;
+}
+
+.console__aspect[data-lifted] {
+  z-index: 2;
+  background: var(--c-surface);
+  box-shadow: 0 12px 28px -8px rgba(0, 0, 0, 0.2), 0 0 0 1px var(--c-line-2);
+}
+
+.console--dark .console__aspect[data-lifted] {
+  background: var(--c-surface-2);
+  box-shadow: 0 14px 32px -6px rgba(0, 0, 0, 0.9), 0 0 0 1px var(--c-line-2);
+}
+
+.console__aspect[data-lifted] > .console__item {
+  color: var(--c-text);
+}
+
+.console__aspect[data-lifted] > .console__item:not(.is-current) {
+  background: none;
+}
+
+.console .console__grip {
+  margin-left: auto;
+  width: 14px;
+  height: 14px;
+  stroke-width: 2.8;
+  color: var(--c-faint);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.console__item:hover .console__grip,
+.console__aspect[data-lifted] .console__grip {
+  opacity: 1;
+}
+
+.console__rail[data-dragging],
+.console__rail[data-dragging] * {
+  cursor: grabbing !important;
+}
+
+.console__rail[data-dragging] .console__item:not(.is-current):hover {
+  background: none;
+}
+
+.console__slot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  border: 1px dashed var(--c-accent-line);
+  border-radius: 10px;
+  background: var(--c-accent-soft);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.console__slot[data-shown] {
+  opacity: 1;
+}
+
+.console__said {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.console__rail-foot {
+  margin-top: auto;
+  padding: 16px 0 0;
+  display: flex;
+  gap: 6px;
+}
+
+.console__rail-foot .console__jump,
+.console__rail-foot .console__settings {
+  display: flex;
+  align-items: center;
+  height: 34px;
+  border: 1px solid var(--c-line);
+  border-radius: 9px;
+  background: var(--c-surface);
+  color: var(--c-muted);
+  font-size: 13px;
+}
+
+.console__rail-foot .console__jump {
+  flex: 1;
+  min-width: 0;
+  gap: 8px;
+  padding: 0 8px 0 10px;
+}
+
+.console__rail-foot .console__jump:hover,
+.console__rail-foot .console__settings:hover,
+.console__rail-foot .console__settings[aria-expanded="true"] {
+  color: var(--c-text);
+  border-color: var(--c-line-2);
+}
+
+.console__rail-foot .console__jump .icon,
+.console__rail-foot .console__settings .icon {
+  width: 15px;
+  height: 15px;
+}
+
+.console__rail-foot .console__jump span {
+  flex: 1;
+}
+
+/* The scrim behind the phone's list of pages: the phone's alone. */
+.console__scrim {
+  display: none;
+}
+
+/* The surface, the whole height beside the rail, which scrolls (or, for a view that fills it, does not). */
+.console__scroll {
+  min-height: 0;
+  padding-top: env(safe-area-inset-top);
+  overflow: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.console__scroll--fill {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* The surface. */
+.console__content {
+  padding: 28px calc(28px + env(safe-area-inset-right)) 80px 28px;
+  max-width: 1180px;
+  width: 100%;
+}
+
+.console__content--fill {
+  flex: 1;
+  min-height: 0;
+  max-width: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.console__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 22px;
+}
+
+.console__head h1 {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.console__head p {
+  margin: 4px 0 0;
+  color: var(--c-muted);
+  max-width: 64ch;
+}
+
+.console__eyebrow {
+  font-family: var(--c-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-faint);
+  margin-bottom: 6px;
+}
+
+/* A page's own tabs (Console.tsx's Tabs), one a view, along the top of its surface: the current one underlined in
+   the accent. They sit in a strip of their own above the content (outside its padding and width), the same on every
+   page and tab, the line under them across the whole surface. On a phone they scroll sideways. */
+.console__tabs {
+  position: relative;
+  flex: none;
+  display: flex;
+  gap: 4px;
+  padding: 10px calc(28px + env(safe-area-inset-right)) 0 28px;
+  border-bottom: 1px solid var(--c-line);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.console__tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.console__tab {
+  flex: none;
+  padding: 8px 10px 9px;
+  margin-bottom: -1px;
+  border-bottom: 2px solid transparent;
+  color: var(--c-muted);
+  font-size: 13px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.console__tab:hover {
+  color: var(--c-text);
+}
+
+.console__tab.is-current {
+  color: var(--c-text);
+  font-weight: 500;
+  border-bottom-color: var(--c-accent);
+}
+
+.console__tab:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: -2px;
+  border-radius: 6px;
+}
+
+/* A tab that opens a page elsewhere (an aspect's links): an arrow out after its name. */
+.console__tab--out {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.console__tab--out .icon {
+  width: 12px;
+  height: 12px;
+  opacity: 0.6;
+}
+
+/* Words for a screen reader alone. */
+.console__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.console__view {
+  display: grid;
+  gap: 20px;
+}
+
+.console__view--fill {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* The blocks (blocks.tsx). */
+/* Each KPI draws the hairlines at its right and foot, the strip's border hiding those at its edge, so a last row not
+   full is the surface, not a grey gap. */
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  border: 1px solid var(--c-line);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--c-surface);
+}
+
+.kpi {
+  padding: 16px 18px;
+  min-width: 0;
+  background: var(--c-surface);
+  box-shadow: 1px 0 0 var(--c-line), 0 1px 0 var(--c-line);
+}
+
+.kpi__label {
+  font-size: 12px;
+  color: var(--c-muted);
+  font-weight: 500;
+}
+
+.kpi__value {
+  font-family: var(--c-mono);
+  font-size: 24px;
+  letter-spacing: -0.02em;
+  margin-top: 6px;
+  line-height: 1;
+  color: var(--c-text);
+}
+
+.kpi__value small {
+  font-size: 12px;
+  color: var(--c-muted);
+  margin-left: 3px;
+  font-family: var(--c-sans);
+}
+
+.kpi__note {
+  font-size: 11px;
+  color: var(--c-muted);
+  margin-top: 8px;
+  font-weight: 500;
+}
+
+.kpi--accent .kpi__value { color: var(--c-accent); }
+.kpi--muted .kpi__value { color: var(--c-muted); }
+.kpi--out .kpi__value { color: var(--c-out); }
+.kpi--mild .kpi__value { color: var(--c-mild); }
+.kpi--edge .kpi__value,
+.kpi--in .kpi__value { color: var(--c-in); }
+.kpi--treated .kpi__value { color: var(--c-treated); }
+.kpi--unjudged .kpi__value { color: var(--c-unjudged); }
+
+.card {
+  border: 1px solid var(--c-line);
+  border-radius: 14px;
+  background: var(--c-surface);
+  padding: 16px 18px 14px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.card--flush {
+  padding: 0;
+}
+
+.card--flush .card__head {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--c-line);
+  margin-bottom: 0;
+}
+
+.card__head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.card__head h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card__icon {
+  color: var(--c-accent);
+  align-self: center;
+}
+
+.card__aside {
+  font-family: var(--c-mono);
+  font-size: 11px;
+  color: var(--c-faint);
+  white-space: nowrap;
+}
+
+.two {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: 16px;
+}
+
+.panels {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.c-chart__bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 5px;
+  border-bottom: 1px solid var(--c-line);
+  padding-bottom: 8px;
+}
+
+.c-chart__bars i {
+  flex: 1;
+  min-width: 0;
+  border-radius: 3px 3px 0 0;
+  background: var(--c-text);
+  opacity: 0.14;
+}
+
+.c-chart__bars i:nth-last-child(-n + 4) {
+  opacity: 0.3;
+}
+
+.c-chart__bars i:last-child {
+  background: var(--c-accent);
+  opacity: 1;
+}
+
+.c-chart__cap {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--c-mono);
+  font-size: 10px;
+  color: var(--c-faint);
+  margin-top: 8px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.facts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.facts li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 0;
+  border-top: 1px solid var(--c-line);
+  font-size: 13px;
+}
+
+.facts li:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.facts__key {
+  color: var(--c-muted);
+  flex: none;
+}
+
+.facts__value {
+  font-family: var(--c-mono);
+  font-size: 12px;
+  text-align: right;
+}
+
+.c-table {
+  --table-columns: minmax(0, 1fr);
+  background: var(--c-surface);
+  min-width: 0;
+}
+
+.card > .c-table {
+  border: 0;
+}
+
+.console__view > .c-table {
+  border: 1px solid var(--c-line);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.c-table__head,
+.c-table__row {
+  display: grid;
+  grid-template-columns: var(--table-columns);
+  gap: 12px;
+  padding: 10px 16px;
+  align-items: center;
+}
+
+.c-table__head {
+  font-family: var(--c-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--c-faint);
+  border-bottom: 1px solid var(--c-line);
+  background: var(--c-surface-2);
+}
+
+.c-table__row {
+  border-top: 1px solid var(--c-line);
+  text-decoration: none;
+  color: inherit;
+}
+
+.c-table__row:first-of-type {
+  border-top: 0;
+}
+
+.c-table__row--link:hover {
+  background: var(--c-surface-2);
+}
+
+.c-table__row--link:focus-visible {
+  outline-offset: -2px;
+  border-radius: 0;
+}
+
+.c-table__cell {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.c-table__cell--lead {
+  font-weight: 500;
+}
+
+.c-table__row .c-table__cell:not(.c-table__cell--lead) {
+  color: var(--c-muted);
+  font-size: 13px;
+}
+
+.c-table__cell--mono {
+  font-family: var(--c-mono);
+  font-size: 12px;
+}
+
+.c-table__cell--numeric {
+  text-align: right;
+}
+
+.c-table__empty {
+  padding: 16px;
+  color: var(--c-faint);
+  font-size: 13px;
+}
+
+/* An embedded page (FriendMapView.tsx, and a module's own): the frame, filling the area. */
+.embed__frame {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  border: 0;
+  background: var(--c-page);
+}
+
+/* Jump to (Jump.tsx). */
+.jump {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: max(12vh, 40px) 16px 16px;
+}
+
+.jump__box {
+  width: min(560px, 100%);
+  max-height: min(60vh, 520px);
+  display: flex;
+  flex-direction: column;
+  background: var(--c-surface);
+  color: var(--c-text);
+  border: 1px solid var(--c-line-2);
+  border-radius: 14px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
+.jump__field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px 0 14px;
+  height: 48px;
+  border-bottom: 1px solid var(--c-line);
+  color: var(--c-faint);
+}
+
+.jump__field input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  background: none;
+  color: var(--c-text);
+  font: inherit;
+  font-size: 16px;
+  outline: none;
+}
+
+.jump__field input::placeholder {
+  color: var(--c-faint);
+}
+
+.jump__list {
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  overflow: auto;
+}
+
+.jump__entry {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.jump__entry.is-chosen {
+  background: var(--c-accent-soft);
+}
+
+.jump__label {
+  font-weight: 500;
+}
+
+.jump__detail {
+  font-family: var(--c-mono);
+  font-size: 11px;
+  color: var(--c-faint);
+}
+
+.jump__none {
+  padding: 12px 10px;
+  color: var(--c-faint);
+  font-size: 13px;
+}
+
+/* How the blocks reflow on a phone; the shell's phone layout (the bar, the page dropdown, the tabs) is phone.css's. */
+@media (max-width: 899px) {
+  .console__content {
+    padding: 20px 16px 40px;
+  }
+
+  .console__content--fill {
+    padding: 0;
+  }
+
+  .console__head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+
+  .console__head h1 {
+    font-size: 24px;
+  }
+
+  .kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .kpi__value {
+    font-size: 20px;
+  }
+
+  .two,
+  .panels {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .c-chart__bars {
+    height: 120px !important;
+  }
+
+  .c-table__head {
+    display: none;
+  }
+
+  .c-table__row {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 2px;
+  }
+
+  .c-table__cell--phone-hide {
+    display: none;
+  }
+
+  .c-table__cell--numeric {
+    text-align: left;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .console__content > *,
+  .console__view > * {
+    animation: console-rise 0.3s ease both;
+  }
+
+  @keyframes console-rise {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+}
+
+/* The bridge: the old viewer's Health view (modules/health/viewer/, styled in viewer.css for the night look) inside the console
+   takes the console's look through viewer.css's own tokens, set here for each look, and the few colours viewer.css
+   writes outright (the pills, the tags, the stars, the range kinds, the big heart-rate figure) are set again. The
+   Health view's own markup and its charts, bars and modal are untouched. */
+.console {
+  --night: var(--c-page);
+  --star: var(--c-text);
+  --dim: var(--c-muted);
+  --faint: var(--c-surface-2);
+  --line: var(--c-line-2);
+  --panel: var(--c-surface);
+  --head: var(--c-surface-2);
+  --danger: var(--c-out);
+  --serif: var(--c-sans);
+  --sans: var(--c-sans);
+  --series-1: var(--c-blue);
+  --status-out: var(--c-out);
+  --status-mild: var(--c-mild);
+  --status-in: var(--c-in);
+  --status-treated: var(--c-treated);
+  --status-unjudged: var(--c-unjudged);
+  --band-in: rgba(21, 128, 61, 0.1);
+  --band-mild: rgba(217, 119, 6, 0.22);
+  --band-out: rgba(220, 38, 38, 0.12);
+  --cat-heart: #db2777;
+  --cat-sugar: #ea580c;
+  --cat-blood: #9333ea;
+  --cat-iron: #92400e;
+  --cat-kidney: #2563eb;
+  --cat-liver: #0d9488;
+  --cat-hormones: #4f46e5;
+  --cat-metals: #475569;
+  --cat-body: #0891b2;
+  --cat-allergy: #a16207;
+  --cat-infection: #4d7c0f;
+  --cat-sample: #6b7280;
+}
+
+.console--dark {
+  --band-in: rgba(74, 222, 128, 0.14);
+  --band-mild: rgba(251, 191, 36, 0.3);
+  --band-out: rgba(248, 113, 113, 0.2);
+  --cat-heart: #ff6fae;
+  --cat-sugar: #ff9d4d;
+  --cat-blood: #d77bff;
+  --cat-iron: #c8a07a;
+  --cat-kidney: #4aa8ff;
+  --cat-liver: #2fd3bd;
+  --cat-hormones: #929dff;
+  --cat-metals: #9fb3c8;
+  --cat-body: #3fe0f5;
+  --cat-allergy: #e6d3a3;
+  --cat-infection: #c3f07f;
+  --cat-sample: #ececec;
+}
+
+.console .health {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  gap: 20px;
+  font-family: var(--c-sans);
+}
+
+.console .test,
+.console .fitness__card {
+  border-radius: 14px;
+  padding: 16px 18px;
+  box-shadow: var(--c-shadow);
+}
+
+.console .health h2 {
+  font-family: var(--c-mono);
+  font-weight: 500;
+  color: var(--c-faint);
+}
+
+.console .health h2 span {
+  color: var(--c-text);
+}
+
+.console .health .range-info h2 {
+  font: 600 20px/1.2 var(--c-sans);
+  letter-spacing: -0.01em;
+}
+
+.console .fitness__big {
+  font: 500 40px/1 var(--c-mono);
+  letter-spacing: -0.02em;
+}
+
+.console .test__latest b,
+.console .test__name {
+  letter-spacing: -0.01em;
+}
+
+.console .pill--out { color: var(--c-out); background: var(--c-out-soft); }
+.console .pill--mild { color: var(--c-mild); background: var(--c-mild-soft); }
+.console .pill--edge,
+.console .pill--in { color: var(--c-in); background: var(--c-in-soft); }
+.console .pill--treated { color: var(--c-treated); background: var(--c-treated-soft); }
+.console .pill--unjudged { color: var(--c-muted); background: var(--c-surface-2); }
+
+.console .tag { background: var(--c-surface-2); }
+.console .tag--measured { color: var(--c-in); }
+.console .tag--everlab-test { color: var(--c-blue); }
+.console .tag--wearable { color: var(--c-mild); }
+.console .tag--everlab-score { color: var(--c-treated); }
+.console .tag--missing { color: var(--c-out); }
+
+.console .stars { color: var(--c-mild); }
+
+.console .range-kind--reference-interval { color: var(--c-in); background: var(--c-in-soft); }
+.console .range-kind--decision-limit { color: var(--c-mild); background: var(--c-mild-soft); }
+.console .range-kind--lab-interval { color: var(--c-treated); background: var(--c-treated-soft); }
+
+.console .health__group--out .test { border-color: var(--c-out-soft); }
+.console .health__group--mild .test { border-color: var(--c-mild-soft); }
+
+.console .health__group-by button {
+  border-radius: 8px;
+}
+
+.console .health__group-by button[aria-checked="true"] {
+  background: var(--c-surface-2);
+  border-color: var(--c-line-2);
+}
+
+.console .fresh--lasting { background: rgba(37, 99, 235, 0.45); }
+.console--dark .fresh--lasting { background: rgba(96, 165, 250, 0.5); }
+.console .fresh--course .fresh__left {
+  background: repeating-linear-gradient(135deg, var(--c-blue) 0 4px, rgba(37, 99, 235, 0.3) 4px 8px);
+}
+
+.console .range-info::backdrop {
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.console .viewer__message {
+  margin: 20vh auto 0;
+  color: var(--c-muted);
+  text-align: center;
+  font-size: 15px;
+}
+
+/* Events' Tables' list of tables is styled in tables.css, beside its view (EventsSection.tsx).
+   An open table (Rows.tsx) filling the area: the way back to the list, its name and its count on one line above its
+   filter bar, chart and table. */
+.rows {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.rows__head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 8px 28px 0;
+}
+
+.rows__count {
+  margin-left: auto;
+  font-family: var(--c-mono);
+  font-size: 12px;
+  color: var(--c-muted);
+  white-space: nowrap;
+}
+
+/* The bridge for Events: the old viewer's filter bar, chart, table, drawer and conversation (viewer.css, for the night
+   look) take the console's look as Health's view does: viewer.css's accent (--me, amber) and the chart's colour
+   (--call) become the console's green, the night's fills it writes outright the console's surfaces, and its gutter
+   the console's. */
+.console .rows,
+.console .drawer,
+.console .conversation {
+  --me: var(--c-accent);
+  --call: var(--c-accent);
+}
+
+.rows__trail {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.rows__trail a {
+  color: var(--c-muted);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.rows__trail a:hover {
+  color: var(--c-text);
+}
+
+.rows__trail .icon {
+  width: 14px;
+  height: 14px;
+  color: var(--c-faint);
+}
+
+.rows__trail h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.console .rows .filters,
+.console .rows .chart {
+  padding-left: 28px;
+  padding-right: 28px;
+}
+
+.console .rows .table {
+  padding: 0 28px 28px;
+  border-top-color: var(--c-line);
+}
+
+.console .filters__search,
+.console .filter__button,
+.console .select,
+.console .drawer__view,
+.console .conversation__more {
+  background-color: var(--c-surface);
+  border-color: var(--c-line-2);
+  border-radius: 8px;
+}
+
+.console .filter__button:hover,
+.console .filter__button[aria-expanded="true"] {
+  border-color: var(--c-faint);
+}
+
+.console .filters__search:not(:placeholder-shown),
+.console .filter__button--on,
+.console .chip--range,
+.console .drawer__view:hover,
+.console .drawer__read-button,
+.console .conversation__more:hover:not(:disabled) {
+  border-color: var(--c-accent-line);
+  background-color: var(--c-accent-soft);
+}
+
+.console .filter__menu {
+  background: var(--c-surface);
+  border-color: var(--c-line-2);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+}
+
+.console--dark .filter__menu {
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+}
+
+.console .filter__value:hover {
+  background: var(--c-surface-2);
+}
+
+.console .filter__value[aria-pressed="true"] {
+  background: var(--c-accent-soft);
+}
+
+.console .chip {
+  border-color: var(--c-line-2);
+  background: var(--c-surface-2);
+}
+
+.console .segmented {
+  border-radius: 8px;
+}
+
+.console .segmented button[aria-checked="true"] {
+  background: var(--c-surface-2);
+}
+
+.console .chart__drag {
+  fill: var(--c-accent-soft);
+}
+
+.console .chart__axis {
+  stroke: var(--c-line-2);
+}
+
+.console .table tbody tr.table__odd {
+  background: var(--c-surface-2);
+}
+
+.console .table tbody tr:not(.table__spacer):hover {
+  background: var(--c-line);
+}
+
+.console .table tbody tr.table__open,
+.console .table tbody tr.table__open:hover {
+  background: var(--c-accent-soft);
+}
+
+.console .drawer {
+  box-shadow: -16px 0 40px rgba(0, 0, 0, 0.1);
+}
+
+.console--dark .drawer {
+  box-shadow: -16px 0 40px rgba(0, 0, 0, 0.6);
+}
+
+.console .msg__bubble {
+  background: var(--c-surface-2);
+}
+
+.console .msg--self .msg__bubble {
+  border-color: var(--c-accent-line);
+  background: var(--c-accent-soft);
+}
+
+/* Events on a phone: the console's gutter, and the date column, which viewer.css holds at the left under 560 px, on
+   the console's surfaces. */
+@media (max-width: 560px) {
+  .console .table td:first-child {
+    background: var(--c-page);
+  }
+
+  .console .table tbody tr.table__odd td:first-child {
+    background: var(--c-surface-2);
+  }
+}
+
+@media (max-width: 899px) {
+  .rows__head,
+  .console .rows .filters,
+  .console .rows .chart {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .console .rows .table {
+    padding: 0 16px 16px;
+  }
+}
+
+/* Events' Sources (SourcesView.tsx): KPIs, then a card for each way the sources sync, a row a source; an overdue or
+   failing row tinted and its status in the out colour, so it stands out. */
+.sources {
+  display: grid;
+  gap: 20px;
+}
+
+.sources__problem {
+  color: var(--c-out);
+  font-size: 13px;
+  margin: 0;
+}
+
+.sources__what {
+  display: grid;
+  gap: 2px;
+}
+
+.sources__id,
+.sources__note {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--c-faint);
+}
+
+.sources__id {
+  font-family: var(--c-mono);
+}
+
+.sources__status {
+  font-weight: 500;
+}
+
+.c-table__row .sources__status--alert { color: var(--c-out); }
+.c-table__row .sources__status--warn { color: var(--c-mild); }
+.c-table__row .sources__status--ok { color: var(--c-in); }
+.c-table__row .sources__status--muted { color: var(--c-faint); }
+
+.c-table__row--alert {
+  background: var(--c-out-soft);
+  box-shadow: inset 3px 0 0 var(--c-out);
+}

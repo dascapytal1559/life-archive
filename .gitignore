@@ -1,0 +1,30 @@
+# The archive's folder, or the link the move out of the checkout left at its old place. Private; never committed.
+/data
+node_modules/
+.env.local
+# The static demo as npm run build:demo builds it (docs/demo.md): made again from the code on every build.
+/dist-demo
+# This installation's owner's own orders for their agents (AGENTS.md says to read it first), and Claude Code's link to it.
+/AGENTS.local.md
+/CLAUDE.local.md
+# The modules (docs/modules.md): every folder under modules/ is ignored, so a private module cloned in, whose code is
+# not this repository's, is never committed by accident; a module built in this repository is named below to track it.
+/modules/*
+!/modules/health/
+!/modules/exercise/
+!/modules/journal/
+!/modules/rituals/
+!/modules/friend-map/
+!/modules/shopping/
+!/modules/folder-history/
+!/modules/inspirations/
+# Rituals' per-installation files beside its code (modules/rituals/README.md): config/ (which Node, and where the
+# store is), and a store kept beside the code when nothing names another place (never the captain's: his is in the
+# archive's folder).
+/modules/rituals/config/
+/modules/rituals/data/
+/modules/rituals/queue/
+/modules/rituals/evidence/
+/modules/rituals/logs/
+/modules/rituals/.agent-work/
+/devlog/

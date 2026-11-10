@@ -1,0 +1,484 @@
+/* The Calendar's day (DayView.tsx), in the console's tokens: its KPIs across the top, then the
+   day's surface (where the stepping is, over the day event by event, DayList.tsx's list) beside the people on the day.
+   On a phone the whole day scrolls as one, the people a row of faces under the KPIs, the list under them. */
+
+.cal-dayv {
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cal-dayv__sum .kpis {
+  grid-template-columns: repeat(var(--sum-n, 6), minmax(0, 1fr));
+}
+
+.cal-dayv__sum .kpi {
+  padding: 12px 16px;
+}
+
+.cal-dayv__sum .kpi__value {
+  font-size: 20px;
+  margin-top: 5px;
+}
+
+.cal-dayv__sum .kpi__note {
+  margin-top: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cal-dayv__body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: 12px;
+}
+
+.cal-dayv__main,
+.cal-dayv__people {
+  min-height: 0;
+  min-width: 0;
+  border: 1px solid var(--c-line);
+  border-radius: 14px;
+  background: var(--c-surface);
+}
+
+.cal-dayv__main {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Where the stepping is, and the moment before and after. */
+.cal-dayv__steps {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--c-line);
+  font-size: 12px;
+  color: var(--c-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.cal-dayv__where {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cal-dayv__step-buttons {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.cal-dayv__step-buttons button {
+  width: 28px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--c-line-2);
+  border-radius: 8px;
+  background: var(--c-surface);
+}
+
+.cal-dayv__step-buttons button:hover {
+  background: var(--c-surface-2);
+}
+
+.cal-dayv__step-buttons button:disabled {
+  color: var(--c-faint);
+  cursor: default;
+  background: var(--c-surface);
+}
+
+.cal .cal-dayv__step-buttons .icon {
+  width: 14px;
+  height: 14px;
+}
+
+.cal .cal-icon--up,
+.cal .cal-icon--down {
+  transform: rotate(90deg);
+}
+
+/* The day event by event: its time down the left, a line down through it with a dot at each row in its kind's colour,
+   the row's card beside it. No hours and no empty stretch: the rows follow each other however far apart. */
+.cal-tl {
+  --tl-time: 72px;
+  --tl-dot: 22px;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  list-style: none;
+  margin: 0;
+  padding: 14px 18px 24px 8px;
+  position: relative;
+  scroll-padding: 12px;
+}
+
+.cal-tl > li {
+  position: relative;
+}
+
+/* The line through the day, behind the dots. */
+.cal-tl > li::before {
+  content: "";
+  position: absolute;
+  left: calc(var(--tl-time) + var(--tl-dot) / 2 - 0.5px);
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--c-line-2);
+}
+
+.cal-tl > li:first-child::before {
+  top: 14px;
+}
+
+.cal-tl > li:last-child::before {
+  bottom: calc(100% - 14px);
+}
+
+.cal-tl > li:only-child::before {
+  display: none;
+}
+
+.cal-tl__row {
+  display: grid;
+  grid-template-columns: var(--tl-time) var(--tl-dot) minmax(0, 1fr);
+  align-items: start;
+  padding: 4px 0;
+}
+
+.cal-tl__time {
+  padding: 9px 10px 0 0;
+  text-align: right;
+  font-size: 12px;
+  color: var(--c-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.cal-tl__row.is-allday .cal-tl__time {
+  font-size: 11px;
+}
+
+.cal-tl__dot {
+  justify-self: center;
+  margin-top: 13px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px var(--c-surface);
+  position: relative;
+  z-index: 1;
+  transition: transform 0.12s ease;
+}
+
+.cal-tl__card {
+  min-width: 0;
+  margin-left: 6px;
+}
+
+/* A row of the archive's day: a card that opens its row's drawer. Its standard height, a card of three lines, is an
+   hour; one that ran longer is that times its hours (--card-hours, day.ts's cardHours), its words at its top left. */
+.cal-moment {
+  --card-hour: 80px;
+  min-height: calc(var(--card-hour) * var(--card-hours, 1));
+  justify-content: flex-start;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 100%;
+  min-width: 0;
+  padding: 8px 12px 9px;
+  border-radius: 11px;
+  border: 1px solid transparent;
+  background: var(--c-surface-2);
+  text-align: left;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease, background-color 0.12s ease;
+}
+
+.console--dark .cal-moment {
+  border-color: var(--c-line);
+}
+
+.cal-moment:hover {
+  border-color: var(--c-line-2);
+}
+
+.cal-moment:focus-visible {
+  outline: none;
+}
+
+.cal-moment.is-on,
+.cal-moment:focus-visible {
+  background: var(--c-surface);
+  border-color: var(--c-text);
+  box-shadow: var(--c-shadow), 0 4px 14px rgba(0, 0, 0, 0.06);
+}
+
+.cal-tl__row:has(.cal-moment.is-on) .cal-tl__dot {
+  transform: scale(1.35);
+}
+
+.cal-tl__row:has(.cal-moment.is-on) .cal-tl__time {
+  color: var(--c-text);
+  font-weight: 600;
+}
+
+.cal-moment.is-lit {
+  border-color: var(--c-accent);
+  box-shadow: 0 0 0 3px var(--c-accent-soft);
+}
+
+.cal-moment__head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.cal .cal-moment__head .icon {
+  width: 15px;
+  height: 15px;
+  flex: none;
+  stroke-width: 1.9;
+}
+
+.cal-moment__title {
+  flex: 1;
+  min-width: 0;
+  font-size: 13.5px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cal-moment__len {
+  flex: none;
+  font-family: var(--c-mono);
+  font-size: 11px;
+  color: var(--c-muted);
+}
+
+.cal-moment__meta {
+  padding-left: 22px;
+  font-size: 11.5px;
+  color: var(--c-muted);
+  font-variant-numeric: tabular-nums;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The present on today: a line across where it falls among the rows. */
+.cal-tl__now {
+  display: grid;
+  grid-template-columns: calc(var(--tl-time) + var(--tl-dot)) minmax(0, 1fr);
+  align-items: center;
+  min-height: 28px;
+  font-size: 11.5px;
+  color: var(--c-accent);
+  font-weight: 600;
+}
+
+.cal-tl__now .cal-tl__time {
+  padding: 0 calc(var(--tl-dot) + 10px) 0 0;
+  color: var(--c-accent);
+}
+
+.cal-tl__now > span:last-child {
+  position: relative;
+  padding-left: 18px;
+}
+
+.cal-tl__now > span:last-child::before {
+  content: "";
+  position: absolute;
+  left: calc(-1 * var(--tl-dot) / 2 - 4px);
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  margin-top: -4.5px;
+  border-radius: 50%;
+  background: var(--c-accent);
+  box-shadow: 0 0 0 3px var(--c-surface);
+}
+
+.cal-tl__now > span:last-child::after {
+  content: "";
+  position: absolute;
+  left: 52px;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: color-mix(in srgb, var(--c-accent) 45%, transparent);
+}
+
+.cal-tl__none {
+  padding: 40px 0;
+  text-align: center;
+  color: var(--c-faint);
+  font-size: 13px;
+}
+
+.cal-tl > li.cal-tl__none::before {
+  display: none;
+}
+
+/* Everyone on the day, the most messages first, one to narrow it to. */
+.cal-dayv__people {
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 14px 16px 12px;
+}
+
+.cal-dayv__people h3 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.cal-dayv__people .cal-group__none {
+  padding-left: 0;
+}
+
+.cal-dayv__people .cal-person {
+  margin: 1px -6px;
+}
+
+.cal-dayv__people .cal-face {
+  width: 24px;
+  height: 24px;
+  margin-left: 0;
+  font-size: 9px;
+  line-height: 21px;
+  border-color: var(--c-surface);
+}
+
+@media (max-width: 899px) {
+  /* On a phone the day scrolls as one: the KPIs, the people, then the list. */
+  .cal-dayv {
+    gap: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .cal-dayv__sum .kpis {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+  }
+
+  .cal-dayv__sum .kpi {
+    padding: 9px 12px;
+  }
+
+  .cal-dayv__sum .kpi__value {
+    font-size: 16px;
+  }
+
+  .cal-dayv__sum .kpi__label,
+  .cal-dayv__sum .kpi__note {
+    font-size: 11px;
+  }
+
+  .cal-dayv__body {
+    flex: none;
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 0;
+  }
+
+  .cal-dayv__main,
+  .cal-dayv__people {
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+    border-top: 0;
+  }
+
+  .cal-dayv__main {
+    overflow: visible;
+  }
+
+  .cal-dayv__steps {
+    padding: 7px 10px 7px 16px;
+  }
+
+  .cal-tl {
+    --tl-time: 58px;
+    --tl-dot: 18px;
+    overflow: visible;
+    padding: 10px 12px 28px 4px;
+  }
+
+  .cal-tl__time {
+    font-size: 11px;
+    padding-right: 6px;
+  }
+
+  .cal-tl__card {
+    margin-left: 4px;
+  }
+
+  .cal-moment {
+    padding: 7px 10px 8px;
+  }
+
+  /* The people, a row of faces and names that scrolls along. */
+  .cal-dayv__people {
+    overflow: visible;
+    padding: 10px 0 10px 16px;
+  }
+
+  .cal-dayv__people h3 {
+    margin-bottom: 6px;
+  }
+
+  .cal-dayv__people-list {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-right: 16px;
+    scrollbar-width: none;
+  }
+
+  .cal-dayv__people .cal-person {
+    flex: none;
+    width: auto;
+    max-width: 180px;
+    margin: 0;
+    padding: 4px 10px 4px 4px;
+    border: 1px solid var(--c-line);
+    border-radius: 999px;
+  }
+
+  .cal-dayv__people .cal-face {
+    width: 22px;
+    height: 22px;
+    line-height: 19px;
+  }
+}
+
+/* A row after an hour or more quiet sits apart by its --idle-gap (day.ts's idleRows); padding, not margin, so the line
+   through the day runs on through the space. */
+.cal-tl__row.is-idle {
+  padding-top: calc(4px + var(--idle-gap));
+}

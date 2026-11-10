@@ -1,0 +1,10 @@
+{
+  "timeZone": "Australia/Melbourne",
+  "locale": "en-AU",
+  "phoneCountry": "61",
+  "owner": { "name": "Riley" },
+  "pages": "all",
+  "nasBackup": { "hosts": ["sample-nas", "sample-nas-remote"], "repository": "sample-backup/restic", "folders": [{ "folder": "~/Projects/sample/data", "exclude": ["backups"], "database": "sample.sqlite3" }] },
+  "llmSessions": { "projects": ["/home/sample/Projects/firstmate"] },
+  "maps": { "regions": { "sample-city": { "name": "Sampletown", "bbox": [10, 50, 11, 51] } } }
+}

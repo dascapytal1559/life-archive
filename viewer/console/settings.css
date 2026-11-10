@@ -1,0 +1,75 @@
+/* The rail's settings (Settings.tsx): the gear at the rail's foot, its look shared with Jump to's button (console.css),
+   and its menu rising above it, drawn as the Calendar's Calls menu is, at the foot's right edge under the gear. */
+.console__settings-box {
+  position: relative;
+  flex: none;
+}
+
+.console__rail-foot .console__settings {
+  width: 34px;
+  justify-content: center;
+}
+
+.console__menu {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  right: 0;
+  z-index: 20;
+  min-width: 180px;
+  padding: 4px;
+  border: 1px solid var(--c-line-2);
+  border-radius: 10px;
+  background: var(--c-surface);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+  font-size: 13px;
+}
+
+.console--dark .console__menu {
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+}
+
+.console__menu-head {
+  padding: 6px 8px 4px;
+  color: var(--c-faint);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.console__menu .console__menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 8px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--c-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.console__menu .console__menu-item:hover {
+  background: var(--c-line);
+}
+
+.console__menu .console__menu-item[aria-checked="true"] {
+  font-weight: 600;
+}
+
+.console__menu .console__menu-item span {
+  flex: 1;
+}
+
+.console__menu .console__menu-item .icon {
+  width: 15px;
+  height: 15px;
+  color: var(--c-muted);
+}
+
+.console__menu .console__menu-item .console__menu-check {
+  color: var(--c-accent);
+}
